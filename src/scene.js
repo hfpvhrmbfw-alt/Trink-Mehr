@@ -23,20 +23,24 @@ export function createScene(root, on) {
   const shoot = el('g', {}, S);
   const sun = el('g', { class: 'sun' }, S), sunSize = el('g', {}, sun), rays = el('g', { class: 'rays' }, sunSize);
   for (let i = 0; i < 6; i++) el('path', { d: 'M-9 0 L0 -190 L9 0 Z', fill: '#FFF6C9', opacity: 0.2, transform: `rotate(${i * 60 + 15})` }, rays);
-  for (let i = 0; i < 12; i++) el('path', { d: 'M-4 -26 L0 -40 L4 -26 Z', transform: `rotate(${i * 30})`, class: 'ray' }, rays);
+  [[44, 0.16], [33, 0.3]].forEach(([r, opacity]) => el('circle', { cx: 0, cy: 0, r, opacity, class: 'ray' }, rays));
   const disc = el('circle', { cx: 0, cy: 0, r: 22 }, sunSize);
+  el('path', { d: 'M-14 -12 Q-4 -20 8 -17', fill: 'none', stroke: '#FFFBE0', 'stroke-width': 4, 'stroke-linecap': 'round', opacity: 0.6 }, sunSize);
   el('path', { d: 'M-8 -2 q2 -4 4 0 M4 -2 q2 -4 4 0 M-6 6 q6 6 12 0', fill: 'none', stroke: '#B5651D', 'stroke-width': 1.8, 'stroke-linecap': 'round' }, sunSize);
-  const drawn = el('g', {}, S);
+  const lit = el('g', {}, S), drawn = el('g', { filter: 'url(#gemalt)' }, lit);
   const light = el('feColorMatrix', { type: 'matrix' }, el('filter', { id: 'licht', 'color-interpolation-filters': 'sRGB' }, S));
   const rail = el('rect', { x: -200, y: 356, width: 660, height: 4 }, drawn);
   const pickets = el('g', {}, drawn);
   for (let i = -7; i < 16; i++) el('path', { d: `M${4 + i * 29} 386 V342 l9 -9 l9 9 V386 Z`, 'stroke-width': 1 }, pickets);
+  // Gemalt: Schattenseite und Maserung auf jeder Latte, unabhängig von der Zaunfarbe.
+  for (let i = -7; i < 16; i++) { const x = 4 + i * 29, k = Math.abs(i); el('path', { d: `M${x + 12} 386 V339 l3 -3 l3 3 V386 Z`, fill: '#1F3F5C', opacity: 0.13 }, drawn); el('path', { d: `M${x + 5} ${348 + (k * 5 % 9)} v${14 + (k * 3 % 8)} M${x + 9} ${362 - (k * 7 % 10)} v9`, stroke: '#1F3F5C', 'stroke-width': 0.8, 'stroke-linecap': 'round', opacity: 0.16 }, drawn); el('path', { d: `M${x + 2} 384 V344 l7 -7`, fill: 'none', stroke: '#FFFFFF', 'stroke-width': 1.6, 'stroke-linecap': 'round', opacity: 0.4 }, drawn); }
   // Grasbüschel verdecken den Fuß des Zauns, damit er in der gemalten Wiese steht.
-  const tufts = el('g', { class: 'fade' }, S);
+  const fadeOut = el('linearGradient', { id: 'gras', gradientUnits: 'userSpaceOnUse', x1: 0, y1: 374, x2: 0, y2: 393 }, S), g0 = el('stop', { offset: 0, class: 'fade' }, fadeOut), g1 = el('stop', { offset: 1, 'stop-opacity': 0, class: 'fade' }, fadeOut);
+  const tufts = el('g', { fill: 'url(#gras)', filter: 'url(#gemalt)' }, S);
   for (let i = -8; i < 40; i++) { const x = i * 9 + (i % 3) * 2, h = 9 + (i * 7 % 5) * 2; el('path', { d: `M${x - 5} 392 Q${x - 4} ${386 - h / 2} ${x - 6} ${386 - h} Q${x} ${388 - h / 2} ${x + 1} 392 Q${x + 3} ${384 - h / 2} ${x + 6} ${388 - h} Q${x + 6} 388 ${x + 7} 392 Z` }, tufts); }
-  const front = el('g', {}, S);
+  const lit2 = el('g', {}, S), front = el('g', { filter: 'url(#gemalt)' }, lit2);
   const hook = el('path', { d: 'M186 420 V224 Q186 204 158 204 Q130 204 130 213', fill: 'none', stroke: '#5B5148', 'stroke-width': 3, 'stroke-linecap': 'round' }, front);
-  const shadow = el('ellipse', { cx: 130, cy: 421, rx: 44, ry: 6, fill: '#0B2A1E', opacity: 0.28 }, S);
+  const shadow = el('ellipse', { cx: 130, cy: 421, rx: 44, ry: 6, fill: '#0B2A1E', opacity: 0.2, filter: 'url(#gemalt)' }, S);
   const potWrap = el('g', { transform: 'translate(130 365) scale(1.25)' }, front), potWob = el('g', { class: 'tap' }, potWrap);
   const dew = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
   [[108, 368], [150, 366], [131, 373]].forEach(([cx, cy]) => el('ellipse', { cx, cy, rx: 2.2, ry: 2.8, fill: '#CDEBFF', stroke: '#FFFFFF', 'stroke-width': 0.6 }, dew));
@@ -46,6 +50,7 @@ export function createScene(root, on) {
   [[24, 196], [52, 150], [78, 228], [36, 262], [92, 174], [18, 316], [66, 296], [176, 172], [232, 232], [204, 280], [240, 306], [186, 316], [222, 150], [40, 120], [150, 134], [112, 110], [244, 104], [14, 232], [200, 90], [70, 70]].forEach(([cx, y], n) => { const cy = y > 262 ? y - 190 : y; const c = el('circle', { cx, cy, r: n % 3 ? 1.3 : 2, fill: '#FFF6D6', class: 'twinkle' }, stars); c.style.animationDelay = ((n * 0.37) % 2.4) + 's'; });
   const moon = el('g', { class: 'fade', transform: 'translate(210 252)', 'pointer-events': 'none' }, S);
   el('circle', { cx: 0, cy: 0, r: 16 }, el('clipPath', { id: 'moonclip' }, moon));
+  el('circle', { cx: 0, cy: 0, r: 30, fill: '#DCE8FF', opacity: 0.12 }, moon); el('circle', { cx: 0, cy: 0, r: 22, fill: '#DCE8FF', opacity: 0.16 }, moon);
   el('circle', { cx: 0, cy: 0, r: 16, fill: '#F4EFD8' }, moon); el('circle', { cx: -5, cy: -4, r: 3, fill: '#E2DBBE' }, moon); el('circle', { cx: 5, cy: 6, r: 2.2, fill: '#E2DBBE' }, moon);
   const moonDark = el('circle', { cy: 0, r: 16.5, fill: '#00266B', opacity: 0.93, 'clip-path': 'url(#moonclip)' }, moon);
   const flies = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
@@ -55,7 +60,7 @@ export function createScene(root, on) {
   const can = el('g', { class: 'can' }, el('g', { transform: 'translate(172 262)', 'pointer-events': 'none' }, S));
   el('path', { d: 'M2 22 L-26 4 L-22 0 L4 10 Z', fill: '#6F93B3' }, can); el('ellipse', { cx: -25, cy: 2, rx: 6, ry: 4, fill: '#5F88A9' }, can);
   el('path', { d: 'M44 6 q18 10 0 24 M10 0 q12 -16 24 0', fill: 'none', stroke: '#5F88A9', 'stroke-width': 5, 'stroke-linecap': 'round' }, can);
-  el('rect', { x: 0, y: 0, width: 44, height: 34, rx: 6, fill: '#7FA8C9' }, can); el('path', { d: 'M6 6 V28', stroke: '#fff', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.35 }, can);
+  el('rect', { x: 0, y: 0, width: 44, height: 34, rx: 6, fill: '#7FA8C9' }, can); el('path', { d: 'M26 0 H38 Q44 0 44 6 V28 Q44 34 38 34 H26 Z', fill: '#1F3F5C', opacity: 0.2 }, can); el('path', { d: 'M6 6 V28', stroke: '#fff', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.4 }, can);
   const fx = el('g', { 'pointer-events': 'none' }, S);
 
   let key = '', unit = null, phase = 'mittag';
@@ -75,8 +80,8 @@ export function createScene(root, on) {
       const c = PHASES[v.phase], hang = v.species.form === 'hang';
       if (!bg[v.phase].getAttribute('href')) bg[v.phase].setAttribute('href', `bilder/${v.phase}.webp`);
       for (const name in bg) bg[name].style.opacity = name === v.phase ? 1 : 0;
-      if (c.light) { light.setAttribute('values', `${c.light[0]} 0 0 0 0 0 ${c.light[1]} 0 0 0 0 0 ${c.light[2]} 0 0 0 0 0 1 0`); for (const g of [drawn, front]) g.setAttribute('filter', 'url(#licht)'); } else for (const g of [drawn, front]) g.removeAttribute('filter');
-      tufts.style.fill = c.grass;
+      if (c.light) { light.setAttribute('values', `${c.light[0]} 0 0 0 0 0 ${c.light[1]} 0 0 0 0 0 ${c.light[2]} 0 0 0 0 0 1 0`); for (const g of [lit, lit2]) g.setAttribute('filter', 'url(#licht)'); } else for (const g of [lit, lit2]) g.removeAttribute('filter');
+      g0.style.stopColor = g1.style.stopColor = c.grass;
       sun.style.transform = `translate(${c.sun[0]}px,${c.sun[1]}px)`; sun.style.opacity = c.sunOn; disc.setAttribute('fill', c.sunColor);
       sunSize.setAttribute('transform', `scale(${v.heat ? 1.35 : 1})`);
       rays.querySelectorAll('.ray').forEach((r) => r.setAttribute('fill', c.sunColor));

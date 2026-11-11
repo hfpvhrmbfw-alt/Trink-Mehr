@@ -14,8 +14,10 @@ function sign(g, x, text, kind) {
 }
 
 function drawRow(svg, row, ctx) {
-  const bed = ctx.bed;
-  el('rect', { x: 8, y: SOIL_Y - 13, width: 314, height: 20, rx: 7, fill: '#7A5638' }, svg);
+  const bed = ctx.bed, row0 = svg;
+  svg = el('g', { filter: 'url(#gemalt)' }, row0); // alles Gemalte; Schilder und Zahlen bleiben scharf
+  el('rect', { x: 8, y: SOIL_Y - 13, width: 314, height: 20, rx: 7, fill: '#6E4A30' }, svg);
+  for (let i = 0; i < 16; i++) el('ellipse', { cx: 18 + i * 19.5, cy: SOIL_Y - 9 + (i % 3) * 2, rx: 7, ry: 2.4, fill: i % 2 ? '#8A6240' : '#4F3524', opacity: 0.7 }, svg);
   const signs = el('g', {});
   let slot = 0;
   for (const item of row) {
@@ -27,8 +29,8 @@ function drawRow(svg, row, ctx) {
       t.textContent = MONTHS_SHORT[+item.month.slice(5, 7) - 1];
     } else if (item.type === 'gap') {
       const cx = x + SLOT_W / 2;
-      el('ellipse', { cx, cy: SOIL_Y - 9, rx: 52, ry: 9, fill: '#A9CC8E' }, svg);
-      for (let i = -3; i <= 3; i++) el('path', { d: `M${cx + i * 13} ${SOIL_Y - 10} q-3 -9 -5 -11 M${cx + i * 13} ${SOIL_Y - 10} q1 -10 3 -13 M${cx + i * 13} ${SOIL_Y - 10} q4 -7 7 -8`, fill: 'none', stroke: '#7FB36A', 'stroke-width': 1.6, 'stroke-linecap': 'round' }, svg);
+      el('ellipse', { cx, cy: SOIL_Y - 9, rx: 52, ry: 9, fill: '#7CC047' }, svg);
+      for (let i = -3; i <= 3; i++) el('path', { d: `M${cx + i * 13} ${SOIL_Y - 10} q-3 -9 -5 -11 M${cx + i * 13} ${SOIL_Y - 10} q1 -10 3 -13 M${cx + i * 13} ${SOIL_Y - 10} q4 -7 7 -8`, fill: 'none', stroke: '#3F8436', 'stroke-width': 1.6, 'stroke-linecap': 'round' }, svg);
       const same = item.from.slice(0, 7) === item.to.slice(0, 7);
       sign(signs, cx, same ? `${dd(item.from)}.–${dd(item.to)}.` : `${dd(item.from)}.${+item.from.slice(5, 7)}.–${dd(item.to)}.${+item.to.slice(5, 7)}.`, 'gap');
     } else if (item.type === 'empty') {
@@ -53,11 +55,13 @@ function drawRow(svg, row, ctx) {
     }
     slot += item.type === 'gap' ? 2 : 1;
   }
-  svg.appendChild(signs);
+  row0.appendChild(signs);
+  svg = el('g', { filter: 'url(#gemalt)' }, row0);
   el('rect', { x: 4, y: SOIL_Y, width: 322, height: 18, rx: 3, fill: bed.color }, svg);
   el('rect', { x: 4, y: SOIL_Y + 13, width: 322, height: 5, rx: 2.5, fill: bed.dark }, svg);
   if (bed.id === 'stein') for (let i = 1; i < 8; i++) el('path', { d: `M${4 + i * 40} ${SOIL_Y + 1} v12`, stroke: bed.dark, 'stroke-width': 1.5 }, svg);
   if (bed.id === 'weide') for (let i = 0; i < 27; i++) el('path', { d: `M${8 + i * 12} ${SOIL_Y + 13} l8 -12`, stroke: bed.dark, 'stroke-width': 1.5, 'stroke-linecap': 'round' }, svg);
+  el('path', { d: `M8 ${SOIL_Y + 2.5} H318`, stroke: '#FFF6DC', 'stroke-width': 1.6, 'stroke-linecap': 'round', opacity: 0.35 }, svg);
   if (bed.id === 'holz') el('path', { d: `M14 ${SOIL_Y + 6} h120 M170 ${SOIL_Y + 8} h140`, stroke: bed.dark, 'stroke-width': 1, opacity: 0.5, 'stroke-linecap': 'round' }, svg);
 }
 
@@ -98,5 +102,6 @@ export function renderFence(root, fence) {
   root.replaceChildren();
   const svg = el('svg', { viewBox: '0 0 330 56', preserveAspectRatio: 'xMidYMax slice', 'aria-hidden': 'true' }, root);
   el('rect', { x: 0, y: 24, width: 330, height: 4, fill: fence.line }, svg);
-  for (let i = 0; i < 12; i++) el('path', { d: `M${1 + i * 28} 56 V14 l9 -9 l9 9 V56 Z`, fill: fence.color, stroke: fence.line, 'stroke-width': 1 }, svg);
+  const g = el('g', { filter: 'url(#gemalt)' }, svg);
+  for (let i = 0; i < 12; i++) { const x = 1 + i * 28; el('path', { d: `M${x} 56 V14 l9 -9 l9 9 V56 Z`, fill: fence.color, stroke: fence.line, 'stroke-width': 1 }, g); el('path', { d: `M${x + 12} 56 V11 l3 -3 l3 3 V56 Z`, fill: '#1F3F5C', opacity: 0.13 }, g); el('path', { d: `M${x + 2} 54 V16 l7 -7`, fill: 'none', stroke: '#FFFFFF', 'stroke-width': 1.6, 'stroke-linecap': 'round', opacity: 0.4 }, g); }
 }

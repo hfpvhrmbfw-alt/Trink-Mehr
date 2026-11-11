@@ -2,10 +2,11 @@
 // Keine Logik, keine Daten. In Swift später als Path-Zeichner neu geschrieben (siehe docs/SWIFT.md).
 const NS = 'http://www.w3.org/2000/svg';
 export function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
-const GREEN = '#5FAE57', STEM = '#4F9A4A', WHITE = '#FFFFFF';
-export const POTS = [['#D9825B','#BF6A45'],['#E6B25C','#C9943F'],['#8FB3D1','#6F93B3'],['#D29ABB','#B37A9B'],['#9CC196','#7CA176']];
+// Farben aus den gemalten Hintergründen: sattes Grün, Schatten kühl (blaugrün) statt grau.
+const GREEN = '#4E9C3E', LIGHT = '#7CC04A', STEM = '#3F8436', WHITE = '#FFFFFF', COOL = [31, 63, 92];
+export const POTS = [['#CF7A4E','#B5633C'],['#E2AC4E','#C48E36'],['#7FA9CF','#5F89B0'],['#D193B4','#B17394'],['#EFE4CC','#D2C4A6']];
 let DETAIL = false;
-function shade(hex, f){ const n = parseInt(hex.slice(1),16), r = Math.round((n>>16)*f), g2 = Math.round(((n>>8)&255)*f), b = Math.round((n&255)*f); return '#'+((1<<24)+(r<<16)+(g2<<8)+b).toString(16).slice(1); }
+function shade(hex, f){ const n = parseInt(hex.slice(1),16), m = (1-f)*.75, r = Math.round((n>>16)*f + COOL[0]*m), g2 = Math.round(((n>>8)&255)*f + COOL[1]*m), b = Math.round((n&255)*f + COOL[2]*m); return '#'+((1<<24)+(r<<16)+(g2<<8)+b).toString(16).slice(1); }
 
 function leaf(g, x, y, ang, len, shape, col){
   var n;
@@ -16,15 +17,16 @@ function leaf(g, x, y, ang, len, shape, col){
     if (shape === 'round'){ for (var q = -1; q <= 1; q++) el('path',{d:'M'+len*.12+' 0 L'+len*.9+' '+(q*len*.3),stroke:shade(col,.65),'stroke-width':.6,fill:'none'},gg); }
     else { var w2 = shape === 'long' ? .17 : shape === 'heart' ? .6 : .42;
       el('path',{d:'M0 0 Q'+len*.5+' '+(len*w2)+' '+len+' 0 Z',fill:shade(col,.82)},gg);
-      el('path',{d:'M0 0 L'+len*.93+' 0 M'+len*.3+' 0 l'+len*.14+' '+(-len*w2*.42)+' M'+len*.5+' 0 l'+len*.14+' '+(len*w2*.38)+' M'+len*.62+' 0 l'+len*.1+' '+(-len*w2*.3),stroke:shade(col,.6),'stroke-width':.6,'stroke-linecap':'round',fill:'none'},gg); }
+      el('path',{d:'M0 0 L'+len*.93+' 0 M'+len*.3+' 0 l'+len*.14+' '+(-len*w2*.42)+' M'+len*.5+' 0 l'+len*.14+' '+(len*w2*.38)+' M'+len*.62+' 0 l'+len*.1+' '+(-len*w2*.3),stroke:shade(col,.6),'stroke-width':.6,'stroke-linecap':'round',fill:'none'},gg);
+      el('path',{d:'M'+len*.18+' '+(-len*w2*.3)+' Q'+len*.5+' '+(-len*w2*.8)+' '+len*.82+' '+(-len*w2*.16),stroke:'#F4FFC8','stroke-width':len*.07,'stroke-linecap':'round',fill:'none',opacity:.45},gg); }
   }
 }
 function flower(g, x, y, sp, s, open){
   var f = el('g', {transform:'translate('+x+' '+y+')'}, g), k = sp.flower, i, a;
   var edge = sp.color === WHITE ? '#CFC8BC' : 'none';
   if (!open){
-    if (k === 'bell') { el('ellipse',{cx:0,cy:s*.3,rx:s*.2,ry:s*.34,fill:sp.color,stroke:edge,'stroke-width':.7},f); el('ellipse',{cx:0,cy:s*.08,rx:s*.2,ry:s*.16,fill:'#6CBF5D'},f); return; }
-    el('ellipse',{cx:0,cy:0,rx:s*.2,ry:s*.3,fill:'#6CBF5D'},f); el('ellipse',{cx:0,cy:-s*.15,rx:s*.12,ry:s*.16,fill:sp.color,stroke:edge,'stroke-width':.7},f); return;
+    if (k === 'bell') { el('ellipse',{cx:0,cy:s*.3,rx:s*.2,ry:s*.34,fill:sp.color,stroke:edge,'stroke-width':.7},f); el('ellipse',{cx:0,cy:s*.08,rx:s*.2,ry:s*.16,fill:LIGHT},f); return; }
+    el('ellipse',{cx:0,cy:0,rx:s*.2,ry:s*.3,fill:LIGHT},f); el('ellipse',{cx:0,cy:-s*.15,rx:s*.12,ry:s*.16,fill:sp.color,stroke:edge,'stroke-width':.7},f); return;
   }
   if (k === 'daisy' || k === 'sun'){
     var n = sp.petals || 16;
@@ -50,17 +52,21 @@ function flower(g, x, y, sp, s, open){
     el('path',{d:'M'+(-w)+' 0 Q'+(-w*1.1)+' '+(h*.7)+' '+(-w*1.55)+' '+h+' L'+(w*1.55)+' '+h+' Q'+(w*1.1)+' '+(h*.7)+' '+w+' 0 Q0 '+(-w*.9)+' '+(-w)+' 0 Z',fill:sp.color,stroke:edge,'stroke-width':.7},f);
     el('ellipse',{cx:0,cy:h,rx:w*1.2,ry:s*.11,fill:sp.color2},f); el('circle',{cx:0,cy:h+s*.12,r:s*.07,fill:'#FFD35C'},f);
   }
+  // Gemalt: ein Schatten unten rechts und ein Lichttupfer oben links auf jeder offenen Blüte.
+  if (DETAIL && k !== 'daisy' && k !== 'sun'){ var cy0 = k === 'bell' ? s*.45 : k === 'tulip' ? -s*.3 : 0;
+    el('ellipse',{cx:s*.16,cy:cy0+s*.18,rx:s*.2,ry:s*.11,fill:shade(sp.color,.55),opacity:.35,transform:'rotate(-35 '+s*.16+' '+(cy0+s*.18)+')'},f);
+    el('ellipse',{cx:-s*.16,cy:cy0-s*.16,rx:s*.15,ry:s*.07,fill:'#FFFFFF',opacity:.4,transform:'rotate(-35 '+(-s*.16)+' '+(cy0-s*.16)+')'},f); }
 }
 function berry(g, x, y){ var b = el('g',{transform:'translate('+x+' '+y+')'},g); el('path',{d:'M-5 -2 Q-6 6 0 9 Q6 6 5 -2 Q0 -5 -5 -2 Z',fill:'#E83A4A'},b); el('path',{d:'M-4 -3 L0 -1 L4 -3 L0 -6 Z',fill:GREEN},b); [[-2,2],[2,3],[0,6]].forEach(function(p){ el('circle',{cx:p[0],cy:p[1],r:.6,fill:'#FFE27A'},b); }); }
 function stem(g, x0, y0, x1, y1, bend, w){
   var cx = (x0+x1)/2 + (bend||0), cy = (y0+y1)/2;
   var sd = 'M'+x0+' '+y0+' Q'+cx+' '+cy+' '+x1+' '+y1; el('path',{d:sd,fill:'none',stroke:STEM,'stroke-width':w||2.6,'stroke-linecap':'round'},g);
-  if (DETAIL) el('path',{d:sd,fill:'none',stroke:'#8AD078','stroke-width':(w||2.6)*.3,'stroke-linecap':'round',transform:'translate(-0.7 0)'},g);
+  if (DETAIL) el('path',{d:sd,fill:'none',stroke:'#B5DE6E','stroke-width':(w||2.6)*.3,'stroke-linecap':'round',transform:'translate(-0.7 0)'},g);
   return function(t){ var u = 1-t; return [u*u*x0+2*u*t*cx+t*t*x1, u*u*y0+2*u*t*cy+t*t*y1]; };
 }
-function sideLeaves(g, pt, sp, n, len){ for (var i = 0; i < n; i++){ var p = pt(.22 + i*.5/Math.max(n-1,1)*(n>1?1:0) + (n===1?.2:0)); leaf(g, p[0], p[1], i%2 ? -150 : -30, len*(1 - i*.08), sp.leaf||'oval', i%2 ? GREEN : '#6CBF5D'); } }
-function basal(g, H, full){ var L = Math.min(H*.62, 40); leaf(g,0,0,-60,L,'long',GREEN); leaf(g,0,0,-120,L,'long','#6CBF5D'); if (full) leaf(g,0,0,-82,L*.7,'long','#4F9A4A'); }
-function seedling(g){ stem(g,0,0,0,-11,2,2.2); el('ellipse',{cx:-5,cy:-13,rx:5.2,ry:2.9,fill:'#8FD06E',transform:'rotate(-25 -5 -13)'},g); el('ellipse',{cx:5,cy:-13,rx:5.2,ry:2.9,fill:'#8FD06E',transform:'rotate(25 5 -13)'},g); }
+function sideLeaves(g, pt, sp, n, len){ for (var i = 0; i < n; i++){ var p = pt(.22 + i*.5/Math.max(n-1,1)*(n>1?1:0) + (n===1?.2:0)); leaf(g, p[0], p[1], i%2 ? -150 : -30, len*(1 - i*.08), sp.leaf||'oval', i%2 ? GREEN : LIGHT); } }
+function basal(g, H, full){ var L = Math.min(H*.62, 40); leaf(g,0,0,-60,L,'long',GREEN); leaf(g,0,0,-120,L,'long',LIGHT); if (full) leaf(g,0,0,-82,L*.7,'long',STEM); }
+function seedling(g){ stem(g,0,0,0,-11,2,2.2); el('ellipse',{cx:-5,cy:-13,rx:5.2,ry:2.9,fill:'#9AD45A',transform:'rotate(-25 -5 -13)'},g); el('ellipse',{cx:5,cy:-13,rx:5.2,ry:2.9,fill:'#9AD45A',transform:'rotate(25 5 -13)'},g); }
 
 function plant(g, sp, stage){
   if (stage <= 0) return;
@@ -74,20 +80,20 @@ function plant(g, sp, stage){
       var c1 = [sg*(outer ? 40 : 30), -8], c2 = [sg*(outer ? 42 : 33), len*.4];
       el('path',{d:'M'+x0+' 0 C'+c1[0]+' '+c1[1]+' '+c2[0]+' '+c2[1]+' '+ex+' '+len,fill:'none',stroke:STEM,'stroke-width':2.2,'stroke-linecap':'round'},g);
       var bz = function(t){ var u = 1-t; return [u*u*u*x0+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*ex, 3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*len]; };
-      [.3,.5,.7,.88].forEach(function(t, j){ if (!full && j > 1) return; var q = bz(full ? t : t*1.1); leaf(g, q[0], q[1], (j%2 ? 1 : -1)*(k>0?1:-1) > 0 ? 20 : 160, sp.leaf === 'round' ? 8 : 10, sp.leaf, j%2 ? GREEN : '#6CBF5D'); });
+      [.3,.5,.7,.88].forEach(function(t, j){ if (!full && j > 1) return; var q = bz(full ? t : t*1.1); leaf(g, q[0], q[1], (j%2 ? 1 : -1)*(k>0?1:-1) > 0 ? 20 : 160, sp.leaf === 'round' ? 8 : 10, sp.leaf, j%2 ? GREEN : LIGHT); });
       if (full){
         var e = bz(1), mid = bz(.58);
         if (sp.fruit && open && Math.abs(k) === 1) berry(g, e[0], e[1]+2); else flower(g, e[0], e[1] + (sp.flower==='bell'?0:2), sp, sp.size, open);
         if (!outer) flower(g, mid[0] + sg*4, mid[1], sp, sp.size*.85, open);
       }
     });
-    for (i = -1; i <= 1; i++) leaf(g, i*8, 0, -90 + i*35, 11, sp.leaf, i ? '#6CBF5D' : GREEN);
+    for (i = -1; i <= 1; i++) leaf(g, i*8, 0, -90 + i*35, 11, sp.leaf, i ? LIGHT : GREEN);
     return;
   }
   if (sp.form === 'cactus'){
     var rx = full ? 15 : 10, ry = full ? 27 : 15;
-    if (full){ el('path',{d:'M12 -22 Q26 -22 25 -38',fill:'none',stroke:'#58A46A','stroke-width':9,'stroke-linecap':'round'},g); }
-    el('ellipse',{cx:0,cy:-ry+3,rx:rx,ry:ry,fill:'#58A46A'},g);
+    if (full){ el('path',{d:'M12 -22 Q26 -22 25 -38',fill:'none',stroke:'#4C9A5C','stroke-width':9,'stroke-linecap':'round'},g); }
+    el('ellipse',{cx:0,cy:-ry+3,rx:rx,ry:ry,fill:'#4C9A5C'},g);
     el('path',{d:'M-'+rx*.4+' -3 Q-'+rx*.75+' '+(-ry)+' -'+rx*.3+' '+(-ry*2+6)+' M'+rx*.4+' -3 Q'+rx*.75+' '+(-ry)+' '+rx*.3+' '+(-ry*2+6),fill:'none',stroke:'#3F8C52','stroke-width':1.4,'stroke-linecap':'round'},g);
     for (i = 0; i < (full ? 7 : 4); i++){ var yy = -6 - i*(ry*2-10)/(full?7:4), xx = (i%2 ? 1 : -1)*rx*.15; el('path',{d:'M'+(xx-2)+' '+yy+' l4 -2 M'+(xx-2)+' '+(yy-2)+' l4 2',stroke:'#F4F1E8','stroke-width':.9,'stroke-linecap':'round'},g); }
     if (full) flower(g, 0, -ry*2 + 3 - (open ? 3 : 2), sp, sp.size, open);
@@ -99,7 +105,7 @@ function plant(g, sp, stage){
     if (sp.basal) basal(g,H,full); else sideLeaves(g, pt, sp, full ? (sp.leaves||2) : 2, sp.leaf === 'heart' ? 20 : 15);
     if (full) flower(g,5,-H,sp,sp.size,open);
   } else if (sp.form === 'multi'){
-    [-1,0,1].forEach(function(k){ var ex = k*17, ey = -H*(k ? .8 : 1); var q = stem(g,k*2,0,ex,ey,k*5,2.2); if (!sp.basal){ p = q(.45); leaf(g,p[0],p[1],k<0?-150:-30,sp.leaf==='round'?9:13,sp.leaf,k?'#6CBF5D':GREEN); } if (full) flower(g,ex,ey,sp,sp.size,open); });
+    [-1,0,1].forEach(function(k){ var ex = k*17, ey = -H*(k ? .8 : 1); var q = stem(g,k*2,0,ex,ey,k*5,2.2); if (!sp.basal){ p = q(.45); leaf(g,p[0],p[1],k<0?-150:-30,sp.leaf==='round'?9:13,sp.leaf,k?LIGHT:GREEN); } if (full) flower(g,ex,ey,sp,sp.size,open); });
     if (sp.basal) basal(g,H,full); else { leaf(g,0,0,-20,sp.leaf==='round'?10:14,sp.leaf,GREEN); leaf(g,0,0,-160,sp.leaf==='round'?10:14,sp.leaf,GREEN); }
   } else if (sp.form === 'spike'){
     var K = sp.stems || 1;
@@ -123,7 +129,13 @@ function pot(g, o){
   el('path',{d:'M-25 6 H25 L20 44 H-20 Z',fill:c[0]},g);
   el('rect',{x:-29,y:-2,width:58,height:10,rx:2,fill:c[1]},g);
   el('ellipse',{cx:0,cy:-1,rx:24,ry:3,fill:'#6B4A35'},g);
-  if (DETAIL){ el('path',{d:'M9 8 H25 L20 44 H11 Z',fill:'#000',opacity:.1},g); el('path',{d:'M-19 12 L-16 38',stroke:'#fff','stroke-width':3,'stroke-linecap':'round',opacity:.32},g); el('path',{d:'M-25 8.6 H25',stroke:'#000','stroke-width':1.4,opacity:.18},g); el('path',{d:'M-26 1 H10',stroke:'#fff','stroke-width':1.6,'stroke-linecap':'round',opacity:.3},g); [[-12,-1.5],[3,-.5],[14,-1.6]].forEach(function(q){ el('circle',{cx:q[0],cy:q[1],r:.9,fill:'#8E6A50'},g); }); if (!o.hang) el('ellipse',{cx:0,cy:45.5,rx:23,ry:2.2,fill:'#000',opacity:.14},g); }
+  if (DETAIL){
+    // Gemalt: kühler Schatten rechts in zwei Lagen, Pinselstriche, Licht links, grüner Widerschein der Wiese unten.
+    el('path',{d:'M4 8 H25 L20 44 H7 Q2 26 4 8 Z',fill:'#1F3F5C',opacity:.16},g); el('path',{d:'M15 8 H25 L20 44 H13 Q17 26 15 8 Z',fill:'#1F3F5C',opacity:.2},g);
+    el('path',{d:'M-21 13 Q-19 26 -17 39 M-15 12 Q-14 20 -13.5 27',stroke:'#FFF6DC','stroke-width':3.4,'stroke-linecap':'round',fill:'none',opacity:.38},g);
+    el('path',{d:'M-8 15 Q2 17 12 14 M-10 36 Q0 38 9 36 M-4 25 Q4 26 10 24',stroke:c[1],'stroke-width':1.2,'stroke-linecap':'round',fill:'none',opacity:.55},g);
+    el('path',{d:'M-20 44 L-20.6 39 Q0 42 20.6 39 L20 44 Z',fill:'#9AD45A',opacity:.28},g);
+    el('path',{d:'M-25 8.6 H25',stroke:'#1F3F5C','stroke-width':1.6,opacity:.25},g); el('path',{d:'M12 -2 H27 Q29 -2 29 0 V6 Q29 8 27 8 H12 Z',fill:'#1F3F5C',opacity:.16},g); el('path',{d:'M-26 0.6 H8',stroke:'#FFF6DC','stroke-width':1.8,'stroke-linecap':'round',opacity:.45},g); [[-12,-1.5],[3,-.5],[14,-1.6]].forEach(function(q){ el('circle',{cx:q[0],cy:q[1],r:.9,fill:'#8E6A50'},g); }); if (!o.hang) el('ellipse',{cx:0,cy:45.5,rx:23,ry:2.2,fill:'#0B2A1E',opacity:.2},g); }
   if (o.label != null){ var t = el('text',{x:0,y:32,'text-anchor':'middle','font-family':'IBM Plex Mono, monospace','font-weight':600,'font-size':14,fill:'#2A1A12'},g); t.textContent = o.label; }
   else if (o.mood){
     var eyes = o.mood === 'schlaf' ? 'M-12 22 q3 3 6 0 M6 22 q3 3 6 0' : o.mood === 'froh' ? 'M-12 23 q3 -5 6 0 M6 23 q3 -5 6 0' : '';

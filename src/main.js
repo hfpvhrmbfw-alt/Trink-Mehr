@@ -70,7 +70,7 @@ function renderToday(keepSaying) {
 }
 function renderDrops() {
   $('drops').innerHTML = state.settings.sizes.map((ml, i) => `<button class="drop" type="button" data-ml="${ml}" aria-label="${ml} Milliliter eintragen">
-    <svg viewBox="0 0 40 52" height="${[46, 58, 72][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="#3E97D6" stroke="#fff" stroke-width="2"/><path d="M11 33 a9 9 0 0 0 6 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><text x="20" y="38" text-anchor="middle" font-weight="700" font-size="${ml > 999 ? 9 : 11}" fill="#fff">${ml}</text></svg></button>`).join('');
+    <svg viewBox="0 0 40 52" height="${[46, 58, 72][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="url(#tropfen)" stroke="#fff" stroke-width="2"/><path d="M27 20 C33 27 35 31 34 38 A15 15 0 0 1 14 47 C26 46 31 36 27 20 Z" fill="#12406E" opacity=".25"/><path d="M10 31 a10 10 0 0 0 5 11 M15 21 q-3 4 -4 6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" opacity=".7"/><text x="20" y="38" text-anchor="middle" font-weight="700" font-size="${ml > 999 ? 9 : 11}" fill="#fff">${ml}</text></svg></button>`).join('');
 }
 async function addEntry(ml, d) {
   if (L.isFull(d)) { say(pick(T.SAYINGS.voll), 2500); return; }

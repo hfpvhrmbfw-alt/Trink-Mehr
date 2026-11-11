@@ -14,6 +14,20 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<!-- Gemeinsame Zeichenhilfen: "gemalt" lässt Kanten leicht wackeln und legt Pinselstruktur auf alles Gezeichnete. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <filter id="gemalt" x="-8%" y="-8%" width="116%" height="116%" color-interpolation-filters="sRGB">
+    <feTurbulence type="fractalNoise" baseFrequency=".05" numOctaves="2" seed="4" result="welle"/>
+    <feDisplacementMap in="SourceGraphic" in2="welle" scale="2" xChannelSelector="R" yChannelSelector="G" result="form"/>
+    <feTurbulence type="fractalNoise" baseFrequency=".05 .3" numOctaves="2" seed="9" result="strich"/>
+    <feColorMatrix in="strich" type="matrix" values="0 0 0 0 1  0 0 0 0 .97  0 0 0 0 .86  .9 0 0 0 -.4" result="hell"/>
+    <feColorMatrix in="strich" type="matrix" values="0 0 0 0 .12  0 0 0 0 .25  0 0 0 0 .36  0 -.9 0 0 .38" result="dunkel"/>
+    <feComposite in="hell" in2="form" operator="in" result="hell2"/>
+    <feComposite in="dunkel" in2="form" operator="in" result="dunkel2"/>
+    <feMerge><feMergeNode in="form"/><feMergeNode in="dunkel2"/><feMergeNode in="hell2"/></feMerge>
+  </filter>
+  <linearGradient id="tropfen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7CCBF5"/><stop offset="1" stop-color="#2B7FC9"/></linearGradient>
+</defs></svg>
 <main id="app">
   <section id="heute" class="view">
     <div id="scene"></div>
