@@ -6,6 +6,7 @@ import { SPECIES, POTS, BEDS, SPORT_ML_PER_30_MIN, HEAT_ML } from './catalog.js'
 import * as T from './texts.js';
 import { createScene } from './scene.js';
 import { renderBeet } from './beet.js';
+import { drawBeetHead } from './papier.js';
 
 const $ = (id) => document.getElementById(id);
 const SPECIES_BY_ID = Object.fromEntries(SPECIES.map((s) => [s.id, s]));
@@ -70,7 +71,7 @@ function renderToday(keepSaying) {
 }
 function renderDrops() {
   $('drops').innerHTML = state.settings.sizes.map((ml, i) => `<button class="drop" type="button" data-ml="${ml}" aria-label="${ml} Milliliter eintragen">
-    <svg viewBox="0 0 40 52" height="${[36, 44, 54][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="#3E97D6" stroke="#fff" stroke-width="2"/><path d="M11 33 a9 9 0 0 0 6 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><text x="20" y="38" text-anchor="middle" font-weight="600" font-size="${ml > 999 ? 9 : 10.5}" fill="#fff">${ml}</text></svg></button>`).join('');
+    <svg viewBox="0 0 40 52" height="${[36, 44, 54][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="#6AAED4"/><ellipse cx="11.5" cy="27" rx="2.6" ry="4.6" transform="rotate(25 11.5 27)" fill="#B6DCF0"/><text x="20" y="38" text-anchor="middle" font-weight="600" font-size="${ml > 999 ? 9 : 10.5}" fill="#fff">${ml}</text></svg></button>`).join('');
 }
 async function addEntry(ml, d) {
   if (L.isFull(d)) { say(pick(T.SAYINGS.voll), 2500); return; }
@@ -101,6 +102,7 @@ function renderBeetView() {
   $('beet-stats').textContent = `${gd} ${gd === 1 ? 'Gartentag' : 'Gartentage'} · ${L.bloomCount(days)} ${L.bloomCount(days) === 1 ? 'Blüte' : 'Blüten'}`;
   $('gift').hidden = picks === 0;
   $('beet-next').textContent = picks ? '' : next ? `Noch ${next - gd} ${next - gd === 1 ? 'Gartentag' : 'Gartentage'} bis zur nächsten Überraschung` : '';
+  if (!$('beet-land').firstChild) drawBeetHead($('beet-land'));
   const items = L.bedItems(days, state.today.day);
   $('beet-empty').hidden = items.length > 2;
   renderBeet($('beet-rows'), items, {

@@ -1,12 +1,13 @@
-// Oberfläche: die Heute-Szene (gemalter Hintergrund nach Tageszeit, Zaun, Kübel, Gießkanne). Zeichnet nur, rechnet nichts.
+// Oberfläche: die Heute-Szene im Papierschnitt (Landschaft nach Tageszeit, Kübel auf dem Stein, Gießkanne). Zeichnet nur, rechnet nichts.
 import { el, drawUnit } from './plants.js';
+import { PAPER, drawLand, lightMatrix } from './papier.js';
 
-// stone: wo der Kübel steht (Mitte der Steinoberseite im jeweiligen Bild). light: Farbfaktoren (R, G, B) für alles Gezeichnete, damit es zum gemalten Hintergrund der Tageszeit passt.
+// Sonne, Sterne und Glühwürmchen je Tageszeit. Landschaft und Licht kommen aus papier.js.
 const PHASES = {
-  morgen: { sun: [40, 236], sunColor: '#FFD9A0', sunOn: 1, light: [1, 0.93, 0.9], grass: '#6F9A5E', stone: [135, 369], star: 0, fly: 0 },
-  mittag: { sun: [212, 236], sunColor: '#FFE07A', sunOn: 1, light: null, grass: '#6FB045', stone: [127, 380], star: 0, fly: 0 },
-  abend: { sun: [222, 258], sunColor: '#FFB25E', sunOn: 1, light: [1, 0.86, 0.68], grass: '#8A8A3A', stone: [126, 354], star: 0.2, fly: 1 },
-  nacht: { sun: [222, 430], sunColor: '#FF9E57', sunOn: 0, light: [0.4, 0.58, 0.82], grass: '#12586A', stone: [137, 356], star: 1, fly: 0.6 },
+  morgen: { sun: [44, 262], sunColor: '#F5C76A', sunOn: 1, star: 0, fly: 0 },
+  mittag: { sun: [206, 214], sunColor: PAPER.sun, sunOn: 1, star: 0, fly: 0 },
+  abend: { sun: [214, 290], sunColor: '#F09A4E', sunOn: 1, star: 0.2, fly: 1 },
+  nacht: { sun: [222, 460], sunColor: '#F09A4E', sunOn: 0, star: 1, fly: 0.6 },
 };
 const again = (node, cls) => { node.classList.remove(cls); void node.getBoundingClientRect(); node.classList.add(cls); };
 
@@ -17,33 +18,30 @@ const again = (node, cls) => { node.classList.remove(cls); void node.getBounding
 export function createScene(root, on) {
   const S = el('svg', { viewBox: '0 0 260 560', preserveAspectRatio: 'xMidYMax slice', 'aria-hidden': 'true' });
   root.appendChild(S);
-  // Gemalte Hintergründe: je Tageszeit ein Bild, gleiche Landschaft, weich überblendet. Geladen wird erst bei Bedarf.
-  const sky = el('g', {}, S), bg = {};
-  for (const name of Object.keys(PHASES)) bg[name] = el('image', { x: -46, y: -65, width: 352, height: 625, preserveAspectRatio: 'xMidYMid slice', class: 'fade', opacity: 0 }, sky);
+  const land = el('g', {}, S);
   const shoot = el('g', {}, S);
   const sun = el('g', { class: 'sun' }, S), sunSize = el('g', {}, sun), rays = el('g', { class: 'rays' }, sunSize);
-  for (let i = 0; i < 6; i++) el('path', { d: 'M-9 0 L0 -190 L9 0 Z', fill: '#FFF6C9', opacity: 0.2, transform: `rotate(${i * 60 + 15})` }, rays);
-  for (let i = 0; i < 12; i++) el('path', { d: 'M-4 -26 L0 -40 L4 -26 Z', transform: `rotate(${i * 30})`, class: 'ray' }, rays);
-  const disc = el('circle', { cx: 0, cy: 0, r: 22 }, sunSize);
-  el('path', { d: 'M-8 -2 q2 -4 4 0 M4 -2 q2 -4 4 0 M-6 6 q6 6 12 0', fill: 'none', stroke: '#B5651D', 'stroke-width': 1.8, 'stroke-linecap': 'round' }, sunSize);
-  const drawn = el('g', {}, S);
+  // Sonne aus Papier: Scheibe mit einem helleren Kreis dahinter, der sich langsam dreht
+  for (let i = 0; i < 8; i++) el('path', { d: 'M-5 -30 L0 -40 L5 -30 Z', transform: `rotate(${i * 45})`, class: 'ray', opacity: 0.55 }, rays);
+  const disc = el('circle', { cx: 0, cy: 0, r: 22, filter: 'url(#lage)' }, sunSize);
+  el('path', { d: 'M-8 -2 q2 -3 4 0 M4 -2 q2 -3 4 0 M-5 6 q5 5 10 0', fill: 'none', stroke: PAPER.ink, 'stroke-width': 1.6, 'stroke-linecap': 'round', opacity: 0.75 }, sunSize);
   const light = el('feColorMatrix', { type: 'matrix' }, el('filter', { id: 'licht', 'color-interpolation-filters': 'sRGB' }, S));
-  // Alles am Kübel steht in einer Gruppe, die je Tageszeit auf den gemalten Stein gesetzt wird.
-  const front = el('g', {}, S);
+  // Alles am Kübel steht in einer Gruppe auf dem Stein; das Licht der Tageszeit liegt darüber.
+  const front = el('g', { transform: 'translate(130 408) scale(0.95) translate(-130 -420)', filter: 'url(#licht)' }, S);
   const hook = el('path', { d: 'M194 420 V186 Q194 162 162 162 Q130 162 130 170', fill: 'none', stroke: '#5B5148', 'stroke-width': 3, 'stroke-linecap': 'round' }, front);
   const soft = el('radialGradient', { id: 'schatten' }, S); el('stop', { offset: 0, 'stop-color': '#0B2A1E', 'stop-opacity': 0.32 }, soft); el('stop', { offset: 1, 'stop-color': '#0B2A1E', 'stop-opacity': 0 }, soft);
-  const shadow = el('ellipse', { cx: 130, cy: 420, rx: 34, ry: 5, fill: 'url(#schatten)' }, front);
-  const potWrap = el('g', { transform: 'translate(130 354) scale(1.5)' }, front), potWob = el('g', { class: 'tap' }, potWrap);
+  const shadow = el('ellipse', { cx: 130, cy: 420, rx: 40, ry: 5, fill: 'url(#schatten)' }, front);
+  const potWrap = el('g', { transform: 'translate(130 354) scale(1.5)' }, front), potWob = el('g', { class: 'tap', filter: 'url(#lage)' }, potWrap);
   const dew = el('g', { class: 'fade', 'pointer-events': 'none' }, front);
   [[106, 356], [154, 354], [131, 361]].forEach(([cx, cy]) => el('ellipse', { cx, cy, rx: 2.2, ry: 2.8, fill: '#CDEBFF', stroke: '#FFFFFF', 'stroke-width': 0.6 }, dew));
   const visitor = el('g', { class: 'hover', 'pointer-events': 'none' }, front), bf = el('g', { transform: 'translate(176 262)' }, visitor);
   el('ellipse', { cx: -5, cy: 0, rx: 5, ry: 7, fill: '#FFB347', class: 'flap' }, bf); el('ellipse', { cx: 5, cy: 0, rx: 5, ry: 7, fill: '#FF8A5B', class: 'flap' }, bf); el('rect', { x: -0.8, y: -5, width: 1.6, height: 10, rx: 0.8, fill: '#2A1A12' }, bf);
   const stars = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
   [[24, 196], [52, 150], [78, 228], [36, 262], [92, 174], [18, 316], [66, 296], [176, 172], [232, 232], [204, 280], [240, 306], [186, 316], [222, 150], [40, 120], [150, 134], [112, 110], [244, 104], [14, 232], [200, 90], [70, 70]].forEach(([cx, y], n) => { const cy = y > 262 ? y - 190 : y; const c = el('circle', { cx, cy, r: n % 3 ? 1.3 : 2, fill: '#FFF6D6', class: 'twinkle' }, stars); c.style.animationDelay = ((n * 0.37) % 2.4) + 's'; });
-  const moon = el('g', { class: 'fade', transform: 'translate(210 252)', 'pointer-events': 'none' }, S);
+  const moon = el('g', { class: 'fade', transform: 'translate(206 214)', 'pointer-events': 'none', filter: 'url(#lage)' }, S);
   el('circle', { cx: 0, cy: 0, r: 16 }, el('clipPath', { id: 'moonclip' }, moon));
   el('circle', { cx: 0, cy: 0, r: 16, fill: '#F4EFD8' }, moon); el('circle', { cx: -5, cy: -4, r: 3, fill: '#E2DBBE' }, moon); el('circle', { cx: 5, cy: 6, r: 2.2, fill: '#E2DBBE' }, moon);
-  const moonDark = el('circle', { cy: 0, r: 16.5, fill: '#00266B', opacity: 0.93, 'clip-path': 'url(#moonclip)' }, moon);
+  const moonDark = el('circle', { cy: 0, r: 16.5, fill: '#24325F', opacity: 0.96, 'clip-path': 'url(#moonclip)' }, moon);
   const flies = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
   [[40, 330], [84, 372], [190, 350], [226, 384], [150, 316]].forEach(([cx, cy], n) => { const c = el('circle', { cx, cy, r: 2.2, fill: '#FFE98A', class: 'fly twinkle' }, flies); c.style.animationDelay = n * 0.9 + 's'; });
   const zz = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
@@ -54,11 +52,11 @@ export function createScene(root, on) {
   el('rect', { x: 0, y: 0, width: 44, height: 34, rx: 6, fill: '#7FA8C9' }, can); el('path', { d: 'M6 6 V28', stroke: '#fff', 'stroke-width': 3, 'stroke-linecap': 'round', opacity: 0.35 }, can);
   const fx = el('g', { 'pointer-events': 'none' }, S), pourFx = el('g', { 'pointer-events': 'none' }, front);
 
-  let key = '', unit = null, phase = 'mittag';
+  let key = '', unit = null, phase = '', sky = null;
   potWob.addEventListener('click', () => { again(potWob, 'wobble'); on.onPot(); });
   sun.addEventListener('click', () => { again(rays, 'pulse'); on.onSun(); });
-  sky.addEventListener('click', () => {
-    if (phase !== 'nacht') return;
+  land.addEventListener('click', (ev) => {
+    if (phase !== 'nacht' || ev.target !== sky) return;
     const x = 40 + Math.random() * 120, y = 90 + Math.random() * 80;
     const s = el('path', { d: `M${x} ${y} l70 34`, stroke: '#FFF6D6', 'stroke-width': 2, 'stroke-linecap': 'round', class: 'shoot' }, shoot);
     setTimeout(() => s.remove(), 900);
@@ -67,11 +65,9 @@ export function createScene(root, on) {
   return {
     /** @param {{phase:string, species:object, stage:number, frac:number, mood:string, pot:{id:string,color:string,dark:string}, heat:boolean, moon:number, visitor:boolean}} v */
     update(v) {
+      if (phase !== v.phase) { sky = drawLand(land, v.phase); light.setAttribute('values', lightMatrix(v.phase)); }
       phase = v.phase;
       const c = PHASES[v.phase], hang = v.species.form === 'hang';
-      if (!bg[v.phase].getAttribute('href')) bg[v.phase].setAttribute('href', `bilder/${v.phase}.webp`);
-      for (const name in bg) bg[name].style.opacity = name === v.phase ? 1 : 0;
-      if (c.light) { light.setAttribute('values', `${c.light[0]} 0 0 0 0 0 ${c.light[1]} 0 0 0 0 0 ${c.light[2]} 0 0 0 0 0 1 0`); for (const g of [drawn, front]) g.setAttribute('filter', 'url(#licht)'); } else for (const g of [drawn, front]) g.removeAttribute('filter');
       sun.style.transform = `translate(${c.sun[0]}px,${c.sun[1]}px)`; sun.style.opacity = c.sunOn; disc.setAttribute('fill', c.sunColor);
       sunSize.setAttribute('transform', `scale(${v.heat ? 1.35 : 1})`);
       rays.querySelectorAll('.ray').forEach((r) => r.setAttribute('fill', c.sunColor));
@@ -79,14 +75,13 @@ export function createScene(root, on) {
       moon.style.opacity = v.phase === 'nacht' ? 1 : 0; zz.style.opacity = v.phase === 'nacht' ? 1 : 0;
       moonDark.setAttribute('cx', v.moon < 0.5 ? -64 * v.moon : 64 * (1 - v.moon));
       dew.style.opacity = v.phase === 'morgen' && !hang ? 1 : 0;
-      const [px, py] = c.stone; front.setAttribute('transform', `translate(${px} ${py}) scale(0.9) translate(-130 -420)`);
       hook.style.display = hang ? '' : 'none'; shadow.style.display = hang ? 'none' : '';
       visitor.style.display = v.visitor ? '' : 'none';
       const k = [v.species.id, v.stage, v.mood, v.pot.id].join('|');
       if (k !== key) {
         const grew = key && key.split('|')[0] === v.species.id && +key.split('|')[1] < v.stage;
         potWob.replaceChildren();
-        unit = drawUnit(potWob, v.species, v.stage, { pot: v.pot, mood: v.mood, detail: true });
+        unit = drawUnit(potWob, v.species, v.stage, { pot: v.pot, mood: v.mood });
         unit.plant.setAttribute('class', 'grow' + (unit.hang && v.stage >= 2 ? ' down' : ''));
         if (grew) again(unit.plant, 'pop');
         key = k;

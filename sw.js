@@ -1,9 +1,8 @@
 // Service Worker: App-Hülle zuerst aus dem Zwischenspeicher, damit sie sofort und offline startet.
 // VERSION bei jeder Änderung an einer Datei aus SHELL hochzählen.
-const VERSION = 'v4';
+const VERSION = 'v5';
 const SHELL = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png',
-  'src/main.js', 'src/model.js', 'src/logic.js', 'src/catalog.js', 'src/storage.js', 'src/texts.js', 'src/plants.js', 'src/scene.js', 'src/beet.js',
-  'bilder/morgen.webp', 'bilder/mittag.webp', 'bilder/abend.webp', 'bilder/nacht.webp', 'bilder/beet.webp', 'bilder/erde.webp', 'bilder/grasweg.webp', 'bilder/kuebel.webp'];
+  'src/main.js', 'src/model.js', 'src/logic.js', 'src/catalog.js', 'src/storage.js', 'src/texts.js', 'src/plants.js', 'src/scene.js', 'src/beet.js', 'src/papier.js'];
 
 // Neue Versionen warten, bis die Seite 'skip' schickt (siehe watchUpdates in main.js). cache:'reload' umgeht den Browser-Zwischenspeicher.
 self.addEventListener('install', (e) => e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' }))))));

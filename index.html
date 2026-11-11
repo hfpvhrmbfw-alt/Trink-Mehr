@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#2574BD">
+<meta name="theme-color" content="#F4E7D4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Vergießmeinnicht">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -15,12 +15,8 @@
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-  <pattern id="grasweg" patternUnits="userSpaceOnUse" width="185" height="22"><image href="bilder/grasweg.webp" width="185" height="22" preserveAspectRatio="none"/></pattern>
-  <!-- Kübel-Designs: der gemalte Terrakotta-Kübel, umgefärbt -->
-  <filter id="k-salbei" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="70"/><feColorMatrix type="saturate" values=".45"/></filter>
-  <filter id="k-himmel" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="185"/><feColorMatrix type="saturate" values=".55"/></filter>
-  <filter id="k-rosa" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="-30"/><feColorMatrix type="saturate" values=".55"/></filter>
-  <filter id="k-honig" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="22"/><feColorMatrix type="saturate" values="1.05"/></filter>
+  <!-- Papierschnitt: weicher Schatten unter jeder Lage -->
+  <filter id="lage" x="-15%" y="-15%" width="130%" height="140%" color-interpolation-filters="sRGB"><feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#3B2E24" flood-opacity=".24"/></filter>
 </defs></svg>
 <main id="app">
   <section id="heute" class="view">
@@ -37,6 +33,7 @@
 
   <section id="beet" class="view beet" hidden>
     <div class="beet-top">
+    <svg id="beet-land" viewBox="0 0 330 150" preserveAspectRatio="xMidYMax slice" aria-hidden="true"></svg>
     <div class="beet-sky">
       <h1>Dein Beet</h1>
       <p id="beet-stats"></p>
