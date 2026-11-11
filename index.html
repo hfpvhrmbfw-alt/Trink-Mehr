@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#B7D69E">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Vergießmeinnicht">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<title>Vergießmeinnicht</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<main id="app">
+  <section id="heute" class="view">
+    <div id="scene"></div>
+    <header class="hud">
+      <button id="tag" type="button" class="hud-main"><b id="ml">0 ml</b><span id="sub"></span><span id="stage" class="stage"></span></button>
+      <button id="gear" type="button" class="sign round" aria-label="Gartenschild: Einstellungen und Profil">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M5 5h14l-2 4 2 4H5z" fill="currentColor"/><path d="M5 3v19" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+    <p id="say" class="bubble" aria-live="polite"></p>
+    <div id="drops" class="drops" role="group" aria-label="Trinken eintragen"></div>
+  </section>
+
+  <section id="beet" class="view beet" hidden>
+    <div class="beet-sky">
+      <h1>Dein Beet</h1>
+      <p id="beet-stats"></p>
+      <p id="beet-next" class="small"></p>
+      <button id="gift" type="button" class="sign" hidden>Such dir etwas aus</button>
+    </div>
+    <div id="beet-fence"></div>
+    <div class="beet-ground">
+      <p id="beet-empty" class="plaque">Hier wächst bald was. Heute Abend zieht deine erste Pflanze ein.</p>
+      <div id="beet-rows"></div>
+    </div>
+  </section>
+
+  <nav class="nav" aria-label="Ansicht">
+    <button type="button" class="sign" data-view="heute" aria-current="page">Heute</button>
+    <button type="button" class="sign" data-view="beet">Beet</button>
+  </nav>
+
+  <div id="toast" class="toast" role="status" hidden><span id="toast-text"></span><button id="toast-action" type="button"></button></div>
+  <dialog id="sheet" class="sheet" aria-label="Details"><div id="sheet-body"></div></dialog>
+</main>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
