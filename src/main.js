@@ -5,7 +5,7 @@ import { sanitizeSettings, sanitizeDay, buildExport, parseImport, LEVELS } from 
 import { SPECIES, FENCES, BEDS, SPORT_ML_PER_30_MIN, HEAT_ML } from './catalog.js';
 import * as T from './texts.js';
 import { createScene } from './scene.js';
-import { renderBeet, renderFence } from './beet.js';
+import { renderBeet } from './beet.js';
 
 const $ = (id) => document.getElementById(id);
 const SPECIES_BY_ID = Object.fromEntries(SPECIES.map((s) => [s.id, s]));
@@ -61,7 +61,7 @@ function renderToday(keepSaying) {
     mood: phase === 'nacht' || st === 0 ? 'schlaf' : st === 4 ? 'froh' : 'wach',
     fence: byId(FENCES, state.settings.fence), moon: L.moonPhase(c.stamp / 86400000),
   });
-  $('heute').classList.toggle('dark', phase === 'nacht');
+  $('app').classList.toggle('nacht', phase === 'nacht');
   $('ml').textContent = fmt(L.dayTotalMl(d));
   $('sub').textContent = 'von ' + fmt(L.dayGoalMl(d)) + (L.extraMl(d) ? ' mit Zuschlag' : '');
   $('stage').textContent = st === 4 ? T.SPECIES_NAMES[sp.id] : T.STAGE_NAMES[st];
@@ -70,7 +70,7 @@ function renderToday(keepSaying) {
 }
 function renderDrops() {
   $('drops').innerHTML = state.settings.sizes.map((ml, i) => `<button class="drop" type="button" data-ml="${ml}" aria-label="${ml} Milliliter eintragen">
-    <svg viewBox="0 0 40 52" height="${[46, 58, 72][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="#3E97D6" stroke="#fff" stroke-width="2"/><path d="M11 33 a9 9 0 0 0 6 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><text x="20" y="38" text-anchor="middle" font-weight="700" font-size="${ml > 999 ? 9 : 11}" fill="#fff">${ml}</text></svg></button>`).join('');
+    <svg viewBox="0 0 40 52" height="${[36, 44, 54][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="#3E97D6" stroke="#fff" stroke-width="2"/><path d="M11 33 a9 9 0 0 0 6 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" opacity=".6"/><text x="20" y="38" text-anchor="middle" font-weight="600" font-size="${ml > 999 ? 9 : 10.5}" fill="#fff">${ml}</text></svg></button>`).join('');
 }
 async function addEntry(ml, d) {
   if (L.isFull(d)) { say(pick(T.SAYINGS.voll), 2500); return; }
@@ -98,7 +98,6 @@ async function removeEntry(d, id) {
 /* ---------- Beet ---------- */
 function renderBeetView() {
   const days = allDays(), gd = L.gardenDays(days), picks = L.picksAvailable(gd, state.settings.unlocked.length), next = L.nextRewardAt(gd);
-  renderFence($('beet-fence'), byId(FENCES, state.settings.fence));
   $('beet-stats').textContent = `${gd} ${gd === 1 ? 'Gartentag' : 'Gartentage'} · ${L.bloomCount(days)} ${L.bloomCount(days) === 1 ? 'Blüte' : 'Blüten'}`;
   $('gift').hidden = picks === 0;
   $('beet-next').textContent = picks ? '' : next ? `Noch ${next - gd} ${next - gd === 1 ? 'Gartentag' : 'Gartentage'} bis zur nächsten Überraschung` : '';
@@ -112,7 +111,7 @@ function renderBeetView() {
   requestAnimationFrame(() => { $('beet').scrollTop = $('beet').scrollHeight; });
 }
 function show(view) {
-  state.view = view;
+  state.view = view; $('app').dataset.view = view;
   $('heute').hidden = view !== 'heute'; $('beet').hidden = view !== 'beet';
   document.querySelectorAll('.nav button').forEach((b) => b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'));
   if (view === 'beet') renderBeetView();
@@ -123,13 +122,13 @@ function refresh() {
 }
 
 /* ---------- Hinweis unten ---------- */
-function toast(text, action, fn) {
+function toast(text, action, fn, sticky) {
   clearTimeout(toastTimer);
   $('toast-text').textContent = text;
   $('toast-action').hidden = !action; $('toast-action').textContent = action || '';
   $('toast-action').onclick = () => { $('toast').hidden = true; fn(); };
   $('toast').hidden = false;
-  toastTimer = setTimeout(() => { $('toast').hidden = true; }, 5000);
+  if (!sticky) toastTimer = setTimeout(() => { $('toast').hidden = true; }, 5000);
 }
 
 /* ---------- Blätter (Dialog von unten) ---------- */
@@ -192,6 +191,7 @@ function openSettings(first) {
       <p class="hint">Stell sie auf dein Glas und deine Flasche ein, in ml.</p></fieldset>
     <fieldset><legend>Garten gestalten</legend><div class="swatches">${swatches('fence', FENCES, T.FENCE_NAMES)}</div><div class="swatches">${swatches('bed', BEDS, T.BED_NAMES)}</div>
       <p class="hint">Neue Farben gibt es für Gartentage, also für jeden Tag mit einem Eintrag. Was freigeschaltet ist, bleibt.</p></fieldset>
+    <fieldset><legend>App</legend><p class="hint" id="upd-hint">Neue Versionen kommen von selbst, sobald du die App öffnest.</p><div class="chips"><button type="button" class="chip-btn" id="upd">Nach neuer Version suchen</button></div></fieldset>
     <fieldset><legend>Sicherung</legend>
       <p class="hint">${s.lastBackupDay ? `Zuletzt gesichert am ${esc(longDate(s.lastBackupDay))}.` : 'Noch nie gesichert.'} Dein Garten liegt nur auf diesem Gerät.</p>
       <div class="chips"><button type="button" class="chip-btn" id="export">Sicherung speichern</button><label class="chip-btn">Sicherung einspielen<input type="file" id="import" accept="application/json,.json" hidden></label></div>
@@ -227,6 +227,10 @@ function openSettings(first) {
   body.onclick = (ev) => {
     if (ev.target.closest('[data-close]')) closeSheet();
     if (ev.target.id === 'export') exportData();
+    if (ev.target.id === 'upd') {
+      $('upd-hint').textContent = 'Suche …';
+      checkForUpdate().then((r) => { $('upd-hint').textContent = { neu: 'Neue Version gefunden, die App lädt neu.', aktuell: 'Du hast schon die neueste Version.', offline: 'Gerade keine Verbindung. Versuch es später noch einmal.' }[r]; });
+    }
   };
   if (!first) $('import').onchange = async (ev) => {
     const file = ev.target.files[0]; if (!file) return;
@@ -303,6 +307,45 @@ async function start() {
     const days = allDays().sort((a, b) => (a.day < b.day ? -1 : 1));
     if (L.backupDue(state.settings.lastBackupDay, state.today.day, L.gardenDays(days), days[0] && days[0].day)) toast('Zeit für eine Sicherung deines Gartens.', 'Sichern', exportData);
   }
-  if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) navigator.serviceWorker.register('sw.js');
+  watchUpdates();
+}
+
+/* ---------- Neue Version ---------- */
+// Der Service Worker lädt eine neue Version im Hintergrund und wartet. Kurz nach dem Öffnen der App wird sie
+// still übernommen (neu geladen), sonst erscheint ein Hinweis mit Knopf. In den Einstellungen kann man selbst suchen.
+let swReg = null, wokeAt = 0;
+function applyUpdate(worker) { worker.postMessage('skip'); }
+function offerUpdate(worker) {
+  if (!worker || !navigator.serviceWorker.controller) return;
+  if (Date.now() - wokeAt < 5000 && !$('sheet').open) applyUpdate(worker);
+  else toast('Eine neue Version ist da.', 'Aktualisieren', () => applyUpdate(worker), true);
+}
+function installed(reg) {
+  return new Promise((ok) => {
+    const w = reg.installing;
+    if (!w) return ok(reg.waiting);
+    w.addEventListener('statechange', () => { if (w.state === 'installed') ok(w); else if (w.state === 'redundant') ok(null); });
+  });
+}
+/** Für den Knopf in den Einstellungen. Antwort: 'neu' | 'aktuell' | 'offline'. */
+async function checkForUpdate() {
+  if (!swReg) return 'offline';
+  try { await swReg.update(); } catch { return 'offline'; }
+  const w = swReg.waiting || await installed(swReg);
+  if (w) { applyUpdate(w); return 'neu'; }
+  return 'aktuell';
+}
+function watchUpdates() {
+  if (!('serviceWorker' in navigator) || !(location.protocol === 'https:' || location.hostname === 'localhost')) return;
+  wokeAt = Date.now();
+  let reloading = false;
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => { if (hadController && !reloading) { reloading = true; location.reload(); } });
+  navigator.serviceWorker.register('sw.js').then((reg) => {
+    swReg = reg;
+    if (reg.waiting) offerUpdate(reg.waiting);
+    reg.addEventListener('updatefound', () => installed(reg).then(offerUpdate));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) { wokeAt = Date.now(); reg.update().catch(() => {}); } });
+  });
 }
 start();

@@ -35,11 +35,12 @@ export function createScene(root, on) {
   const tufts = el('g', { class: 'fade' }, S);
   for (let i = -8; i < 40; i++) { const x = i * 9 + (i % 3) * 2, h = 9 + (i * 7 % 5) * 2; el('path', { d: `M${x - 5} 392 Q${x - 4} ${386 - h / 2} ${x - 6} ${386 - h} Q${x} ${388 - h / 2} ${x + 1} 392 Q${x + 3} ${384 - h / 2} ${x + 6} ${388 - h} Q${x + 6} 388 ${x + 7} 392 Z` }, tufts); }
   const front = el('g', {}, S);
-  const hook = el('path', { d: 'M186 420 V224 Q186 204 158 204 Q130 204 130 213', fill: 'none', stroke: '#5B5148', 'stroke-width': 3, 'stroke-linecap': 'round' }, front);
-  const shadow = el('ellipse', { cx: 130, cy: 421, rx: 44, ry: 6, fill: '#0B2A1E', opacity: 0.28 }, S);
-  const potWrap = el('g', { transform: 'translate(130 365) scale(1.25)' }, front), potWob = el('g', { class: 'tap' }, potWrap);
+  const hook = el('path', { d: 'M194 420 V186 Q194 162 162 162 Q130 162 130 170', fill: 'none', stroke: '#5B5148', 'stroke-width': 3, 'stroke-linecap': 'round' }, front);
+  const soft = el('radialGradient', { id: 'schatten' }, S); el('stop', { offset: 0, 'stop-color': '#0B2A1E', 'stop-opacity': 0.32 }, soft); el('stop', { offset: 1, 'stop-color': '#0B2A1E', 'stop-opacity': 0 }, soft);
+  const shadow = el('ellipse', { cx: 130, cy: 421, rx: 40, ry: 7, fill: 'url(#schatten)' }, S);
+  const potWrap = el('g', { transform: 'translate(130 354) scale(1.5)' }, front), potWob = el('g', { class: 'tap' }, potWrap);
   const dew = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
-  [[108, 368], [150, 366], [131, 373]].forEach(([cx, cy]) => el('ellipse', { cx, cy, rx: 2.2, ry: 2.8, fill: '#CDEBFF', stroke: '#FFFFFF', 'stroke-width': 0.6 }, dew));
+  [[106, 356], [154, 354], [131, 361]].forEach(([cx, cy]) => el('ellipse', { cx, cy, rx: 2.2, ry: 2.8, fill: '#CDEBFF', stroke: '#FFFFFF', 'stroke-width': 0.6 }, dew));
   const visitor = el('g', { class: 'hover', 'pointer-events': 'none' }, S), bf = el('g', { transform: 'translate(176 262)' }, visitor);
   el('ellipse', { cx: -5, cy: 0, rx: 5, ry: 7, fill: '#FFB347', class: 'flap' }, bf); el('ellipse', { cx: 5, cy: 0, rx: 5, ry: 7, fill: '#FF8A5B', class: 'flap' }, bf); el('rect', { x: -0.8, y: -5, width: 1.6, height: 10, rx: 0.8, fill: '#2A1A12' }, bf);
   const stars = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
