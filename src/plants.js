@@ -3,7 +3,6 @@
 const NS = 'http://www.w3.org/2000/svg';
 export function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
 const GREEN = '#5FAE57', STEM = '#4F9A4A', WHITE = '#FFFFFF';
-export const POTS = [['#D9825B','#BF6A45'],['#E6B25C','#C9943F'],['#8FB3D1','#6F93B3'],['#D29ABB','#B37A9B'],['#9CC196','#7CA176']];
 let DETAIL = false;
 function shade(hex, f){ const n = parseInt(hex.slice(1),16), r = Math.round((n>>16)*f), g2 = Math.round(((n>>8)&255)*f), b = Math.round((n&255)*f); return '#'+((1<<24)+(r<<16)+(g2<<8)+b).toString(16).slice(1); }
 
@@ -118,19 +117,17 @@ function plant(g, sp, stage){
 }
 
 function pot(g, o){
-  var c = POTS[(o.pot||0) % POTS.length];
-  if (o.hang){ el('path',{d:'M-27 2 L0 -44 L27 2',fill:'none',stroke:'#8A6F5A','stroke-width':1.6,'stroke-linejoin':'round'},g); el('circle',{cx:0,cy:-45,r:2.6,fill:'none',stroke:'#8A6F5A','stroke-width':1.6},g); }
-  el('path',{d:'M-25 6 H25 L20 44 H-20 Z',fill:c[0]},g);
-  el('rect',{x:-29,y:-2,width:58,height:10,rx:2,fill:c[1]},g);
-  el('ellipse',{cx:0,cy:-1,rx:24,ry:3,fill:'#6B4A35'},g);
-  if (DETAIL){ el('path',{d:'M9 8 H25 L20 44 H11 Z',fill:'#000',opacity:.1},g); el('path',{d:'M-19 12 L-16 38',stroke:'#fff','stroke-width':3,'stroke-linecap':'round',opacity:.32},g); el('path',{d:'M-25 8.6 H25',stroke:'#000','stroke-width':1.4,opacity:.18},g); el('path',{d:'M-26 1 H10',stroke:'#fff','stroke-width':1.6,'stroke-linecap':'round',opacity:.3},g); [[-12,-1.5],[3,-.5],[14,-1.6]].forEach(function(q){ el('circle',{cx:q[0],cy:q[1],r:.9,fill:'#8E6A50'},g); }); if (!o.hang) el('ellipse',{cx:0,cy:45.5,rx:23,ry:2.2,fill:'#000',opacity:.14},g); }
-  if (o.label != null){ var t = el('text',{x:0,y:32,'text-anchor':'middle','font-family':'IBM Plex Mono, monospace','font-weight':600,'font-size':14,fill:'#2A1A12'},g); t.textContent = o.label; }
+  var p = o.pot || { id: 'terrakotta' };
+  if (o.hang){ el('path',{d:'M-22 2 L0 -44 L22 2',fill:'none',stroke:'#8A6F5A','stroke-width':1.6,'stroke-linejoin':'round'},g); el('circle',{cx:0,cy:-45,r:2.6,fill:'none',stroke:'#8A6F5A','stroke-width':1.6},g); }
+  // Gemalter Kübel (von Anna), andere Designs per Farbfilter aus index.html (#k-<id>). Höhe 46: Rand oben bei -2, Boden bei 44.
+  el('image',{href:'bilder/kuebel.webp',x:-22.3,y:-2,width:44.6,height:46,filter:p.id === 'terrakotta' ? 'none' : 'url(#k-'+p.id+')'},g);
+  if (o.label != null){ var t = el('text',{x:0,y:33,'text-anchor':'middle','font-family':'IBM Plex Mono, monospace','font-weight':600,'font-size':14,fill:'#2A1A12'},g); t.textContent = o.label; }
   else if (o.mood){
-    var eyes = o.mood === 'schlaf' ? 'M-12 22 q3 3 6 0 M6 22 q3 3 6 0' : o.mood === 'froh' ? 'M-12 23 q3 -5 6 0 M6 23 q3 -5 6 0' : '';
-    if (eyes) el('path',{d:eyes,fill:'none',stroke:'#2A1A12','stroke-width':2,'stroke-linecap':'round'},g);
-    else { el('circle',{cx:-9,cy:21,r:2.4,fill:'#2A1A12'},g); el('circle',{cx:9,cy:21,r:2.4,fill:'#2A1A12'},g); }
-    el('path',{d:o.mood === 'schlaf' ? 'M-3 31 h6' : 'M-5 29 q5 6 10 0',fill:'none',stroke:'#2A1A12','stroke-width':2,'stroke-linecap':'round'},g);
-    el('ellipse',{cx:-15,cy:28,rx:4,ry:2.4,fill:'#FF9DB8',opacity:.7},g); el('ellipse',{cx:15,cy:28,rx:4,ry:2.4,fill:'#FF9DB8',opacity:.7},g);
+    var eyes = o.mood === 'schlaf' ? 'M-10 24 q2.5 2.5 5 0 M5 24 q2.5 2.5 5 0' : o.mood === 'froh' ? 'M-10 25 q2.5 -4 5 0 M5 25 q2.5 -4 5 0' : '';
+    if (eyes) el('path',{d:eyes,fill:'none',stroke:'#3A2216','stroke-width':1.8,'stroke-linecap':'round'},g);
+    else { el('circle',{cx:-7.5,cy:24,r:2.1,fill:'#3A2216'},g); el('circle',{cx:7.5,cy:24,r:2.1,fill:'#3A2216'},g); }
+    el('path',{d:o.mood === 'schlaf' ? 'M-2.5 32 h5' : 'M-4 30.5 q4 4.5 8 0',fill:'none',stroke:'#3A2216','stroke-width':1.8,'stroke-linecap':'round'},g);
+    el('ellipse',{cx:-12,cy:29.5,rx:3.4,ry:2,fill:'#FF8FA8',opacity:.55},g); el('ellipse',{cx:12,cy:29.5,rx:3.4,ry:2,fill:'#FF8FA8',opacity:.55},g);
   }
 }
 /* Zeichnet Kübel + Pflanze in eine Gruppe; Ursprung = Bodenmitte der Zelle (72 breit, 178 hoch, y von -128 bis 50) */
@@ -146,5 +143,5 @@ function unit(parent, sp, stage, o){
 
 /** Pflanze ohne Kübel (fürs Beet). detail=false zeichnet die vereinfachte Stufe. */
 export function drawPlant(g, sp, stage, detail){ DETAIL = !!detail; try { plant(g, sp, stage); } finally { DETAIL = false; } }
-/** Kübel mit Pflanze. Rückgabe: {g, plant, hang}. o: {pot, label, mood, detail} */
+/** Kübel mit Pflanze. Rückgabe: {g, plant, hang}. o: {pot:{id} aus POTS, label, mood, detail} */
 export function drawUnit(parent, sp, stage, o){ DETAIL = !!(o && o.detail); try { return unit(parent, sp, stage, o); } finally { DETAIL = false; } }

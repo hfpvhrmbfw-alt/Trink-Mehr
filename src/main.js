@@ -2,7 +2,7 @@
 import * as storage from './storage.js';
 import * as L from './logic.js';
 import { sanitizeSettings, sanitizeDay, buildExport, parseImport, LEVELS } from './model.js';
-import { SPECIES, FENCES, BEDS, SPORT_ML_PER_30_MIN, HEAT_ML } from './catalog.js';
+import { SPECIES, POTS, BEDS, SPORT_ML_PER_30_MIN, HEAT_ML } from './catalog.js';
 import * as T from './texts.js';
 import { createScene } from './scene.js';
 import { renderBeet } from './beet.js';
@@ -59,7 +59,7 @@ function renderToday(keepSaying) {
   scene.update({
     phase, species: sp, stage: st, frac: L.stageFrac(p), potId: d.potId, heat: d.heat, visitor: L.hasVisitor(p),
     mood: phase === 'nacht' || st === 0 ? 'schlaf' : st === 4 ? 'froh' : 'wach',
-    fence: byId(FENCES, state.settings.fence), moon: L.moonPhase(c.stamp / 86400000),
+    pot: byId(POTS, state.settings.pot), moon: L.moonPhase(c.stamp / 86400000),
   });
   $('app').classList.toggle('nacht', phase === 'nacht');
   $('ml').textContent = fmt(L.dayTotalMl(d));
@@ -104,7 +104,7 @@ function renderBeetView() {
   const items = L.bedItems(days, state.today.day);
   $('beet-empty').hidden = items.length > 2;
   renderBeet($('beet-rows'), items, {
-    bed: byId(BEDS, state.settings.bed), speciesOf, stageOf: (d) => L.stageOf(L.progress(d)),
+    bed: byId(BEDS, state.settings.bed), pot: byId(POTS, state.settings.pot), speciesOf, stageOf: (d) => L.stageOf(L.progress(d)),
     labelOf: (item) => item.type === 'day' ? `${longDate(item.day.day)}, ${L.progress(item.day) >= 1 ? T.SPECIES_NAMES[speciesOf(item.day).id] : T.STAGE_NAMES[L.stageOf(L.progress(item.day))]}`
       : item.type === 'gap' ? `Pause vom ${longDate(item.from)} bis ${longDate(item.to)}` : item.type === 'today' ? 'Heute, noch im Kübel' : `${longDate(item.date)}, kein Eintrag`,
   });
@@ -189,8 +189,8 @@ function openSettings(first) {
       <label class="field" id="custom-field">Eigene Menge in ml<input name="customGoalMl" inputmode="numeric" pattern="[0-9]*" value="${s.customGoalMl}"></label></fieldset>
     ${first ? '' : `<fieldset><legend>Tropfen</legend><div class="trio">${s.sizes.map((ml, i) => `<label class="field">${['Klein', 'Mittel', 'Groß'][i]}<input name="size${i}" inputmode="numeric" pattern="[0-9]*" value="${ml}"></label>`).join('')}</div>
       <p class="hint">Stell sie auf dein Glas und deine Flasche ein, in ml.</p></fieldset>
-    <fieldset><legend>Garten gestalten</legend><div class="swatches">${swatches('fence', FENCES, T.FENCE_NAMES)}</div><div class="swatches">${swatches('bed', BEDS, T.BED_NAMES)}</div>
-      <p class="hint">Neue Farben gibt es für Gartentage, also für jeden Tag mit einem Eintrag. Was freigeschaltet ist, bleibt.</p></fieldset>
+    <fieldset><legend>Garten gestalten</legend><div class="swatches">${swatches('pot', POTS, T.POT_NAMES)}</div><div class="swatches">${swatches('bed', BEDS, T.BED_NAMES)}</div>
+      <p class="hint">Neue Kübel und Beetkanten gibt es für Gartentage, also für jeden Tag mit einem Eintrag. Was freigeschaltet ist, bleibt.</p></fieldset>
     <fieldset><legend>App</legend><p class="hint" id="upd-hint">Neue Versionen kommen von selbst, sobald du die App öffnest.</p><div class="chips"><button type="button" class="chip-btn" id="upd">Nach neuer Version suchen</button></div></fieldset>
     <fieldset><legend>Sicherung</legend>
       <p class="hint">${s.lastBackupDay ? `Zuletzt gesichert am ${esc(longDate(s.lastBackupDay))}.` : 'Noch nie gesichert.'} Dein Garten liegt nur auf diesem Gerät.</p>
@@ -205,7 +205,7 @@ function openSettings(first) {
   const read = () => {
     const v = Object.fromEntries(new FormData(form)), num = (x) => (x === undefined || x === '' ? null : +x);
     const next = { ...s, potName: v.potName, birthYear: num(v.birthYear), weightKg: num(v.weightKg), special: v.special || null, level: v.level || s.level, customGoalMl: num(v.customGoalMl) ?? s.customGoalMl };
-    if (!first) Object.assign(next, { sizes: [num(v.size0), num(v.size1), num(v.size2)], fence: v.fence || s.fence, bed: v.bed || s.bed });
+    if (!first) Object.assign(next, { sizes: [num(v.size0), num(v.size1), num(v.size2)], pot: v.pot || s.pot, bed: v.bed || s.bed });
     return sanitizeSettings(next);
   };
   const levels = () => {
@@ -260,7 +260,7 @@ async function exportData() {
 
 function openReward() {
   const s = state.settings;
-  const locked = [...FENCES.slice(1).map((x) => ['fence', x, T.FENCE_NAMES]), ...BEDS.slice(1).map((x) => ['bed', x, T.BED_NAMES])].filter(([kind, x]) => !s.unlocked.includes(`${kind}:${x.id}`));
+  const locked = [...POTS.slice(1).map((x) => ['pot', x, T.POT_NAMES]), ...BEDS.slice(1).map((x) => ['bed', x, T.BED_NAMES])].filter(([kind, x]) => !s.unlocked.includes(`${kind}:${x.id}`));
   const body = sheet(`<h2>Such dir etwas aus</h2><p class="lead">Für deine Gartentage. Was du wählst, gehört dir für immer.</p>
     <div class="rewards">${locked.map(([kind, x, names]) => `<button type="button" class="reward" data-kind="${kind}" data-id="${x.id}"><span style="background:${x.color}"></span>${esc(names[x.id])}</button>`).join('')}</div>
     <button type="button" class="link wide" data-close>Später</button>`);

@@ -33,7 +33,7 @@ struct Settings: Codable {
   var onboarded: Bool; var potName: String
   var birthYear: Int?; var weightKg: Int?; var special: Special?
   var level: Level; var customGoalMl: Int; var sizes: [Int]
-  var fence: String; var bed: String; var unlocked: [String]   // "fence:salbei"
+  var pot: String; var bed: String; var unlocked: [String]   // "pot:salbei" (alte Sicherungen: "fence:…" wird zu "pot:…")
   var lastBackupDay: String?
 }
 ```

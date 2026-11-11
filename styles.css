@@ -51,18 +51,16 @@ svg text { font-family:inherit; }
 .nav { color:#1D3A2A; }
 .tab[aria-current="page"] { background:rgba(255,255,255,.92); color:#1D3A2A; box-shadow:0 1px 3px rgba(0,0,0,.12); }
 
-/* Beet: Reihen scrollen über einer stehenden gemalten Wiese */
-.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:#6FAE45; padding-bottom:calc(var(--safe-b) + 70px); }
-.beet::before { content:""; position:fixed; inset:0; background:#6FAE45 url(bilder/wiese.webp) center / cover no-repeat; z-index:-1; }
-.beet { isolation:isolate; }
-.beet-top { background:#2574BD url(bilder/beet.webp) center bottom / cover no-repeat; padding:calc(var(--safe-t) + 12px) 16px 70px; }
+/* Beet: oben Himmel, Zaun und Hügel als Bild, darunter gemalte Erde, die mit den Reihen mitscrollt */
+.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:#5B3F2C url(bilder/erde.webp) 0 0 / 240px repeat; padding-bottom:calc(var(--safe-b) + 70px); }
+.beet-top { background:#2574BD url(bilder/beet.webp) center bottom / cover no-repeat; aspect-ratio:941/492; min-height:calc(var(--safe-t) + 170px); padding:calc(var(--safe-t) + 12px) 16px 0; }
 .beet-sky { max-width:300px; margin:0 auto; border-radius:16px; padding:8px 14px 10px; text-align:center; color:#1D3A2A; }
 .beet-sky h1 { margin:0; font-size:19px; font-weight:700; }
 .beet-sky p { margin:1px 0; font-size:13.5px; font-weight:500; }
 .beet-sky p:empty { display:none; }
 .beet-sky .small { font-size:12.5px; opacity:.85; }
 .beet-sky .sign { margin:8px 0 2px; padding:6px 14px; min-height:36px; font-size:14px; background:#fff; box-shadow:0 1px 3px rgba(0,0,0,.15); }
-.beet-ground { padding:4px 6px 0; }
+.beet-ground { padding:0 6px; }
 #beet-rows svg { display:block; width:100%; height:auto; aspect-ratio:330/164; }
 .plaque { margin:18px auto; max-width:280px; border-radius:14px; padding:12px 14px; text-align:center; font-weight:500; font-size:15px; }
 

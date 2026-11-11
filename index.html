@@ -14,6 +14,14 @@
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <pattern id="grasweg" patternUnits="userSpaceOnUse" width="185" height="22"><image href="bilder/grasweg.webp" width="185" height="22" preserveAspectRatio="none"/></pattern>
+  <!-- Kübel-Designs: der gemalte Terrakotta-Kübel, umgefärbt -->
+  <filter id="k-salbei" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="70"/><feColorMatrix type="saturate" values=".45"/></filter>
+  <filter id="k-himmel" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="185"/><feColorMatrix type="saturate" values=".55"/></filter>
+  <filter id="k-rosa" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="-30"/><feColorMatrix type="saturate" values=".55"/></filter>
+  <filter id="k-honig" color-interpolation-filters="sRGB"><feColorMatrix type="hueRotate" values="22"/><feColorMatrix type="saturate" values="1.05"/></filter>
+</defs></svg>
 <main id="app">
   <section id="heute" class="view">
     <div id="scene"></div>
