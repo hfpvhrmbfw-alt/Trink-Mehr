@@ -16,9 +16,9 @@ export const SCHEMA_VERSION = 1;
  * @property {'sanft'|'richtwert'|'reichlich'|'frei'} level
  * @property {number} customGoalMl
  * @property {number[]} sizes  drei Tropfengrößen in ml, aufsteigend
- * @property {string} fence  ID aus FENCES
+ * @property {string} pot  ID aus POTS (Kübel-Design)
  * @property {string} bed  ID aus BEDS
- * @property {string[]} unlocked  freigeschaltete Gestaltungs-IDs ("fence:salbei")
+ * @property {string[]} unlocked  freigeschaltete Gestaltungs-IDs ("pot:salbei")
  * @property {string|null} lastBackupDay
  */
 
@@ -30,7 +30,7 @@ export function defaultSettings() {
   return {
     onboarded: false, potName: '', birthYear: null, weightKg: null, special: null,
     level: 'richtwert', customGoalMl: 1500, sizes: [150, 250, 500],
-    fence: 'weiss', bed: 'holz', unlocked: [], lastBackupDay: null,
+    pot: 'terrakotta', bed: 'holz', unlocked: [], lastBackupDay: null,
   };
 }
 
@@ -52,9 +52,10 @@ export function sanitizeSettings(raw) {
     level: LEVELS.includes(r.level) ? r.level : d.level,
     customGoalMl: int(r.customGoalMl, 500, 4000, d.customGoalMl),
     sizes: sizes.length === 3 ? sizes.slice().sort((a, b) => a - b) : d.sizes,
-    fence: typeof r.fence === 'string' && ID_RE.test(r.fence) ? r.fence : d.fence,
+    // Früher gab es Zaunfarben statt Kübel-Designs: gleiche IDs, nur 'weiss' wird zu 'terrakotta'.
+    pot: typeof r.pot === 'string' && ID_RE.test(r.pot) ? r.pot : typeof r.fence === 'string' && ID_RE.test(r.fence) && r.fence !== 'weiss' ? r.fence : d.pot,
     bed: typeof r.bed === 'string' && ID_RE.test(r.bed) ? r.bed : d.bed,
-    unlocked: Array.isArray(r.unlocked) ? [...new Set(r.unlocked.filter((u) => typeof u === 'string' && ID_RE.test(u)))] : [],
+    unlocked: Array.isArray(r.unlocked) ? [...new Set(r.unlocked.filter((u) => typeof u === 'string' && ID_RE.test(u)).map((u) => u.replace(/^fence:/, 'pot:')))] : [],
     lastBackupDay: typeof r.lastBackupDay === 'string' && DAY_RE.test(r.lastBackupDay) ? r.lastBackupDay : null,
   };
 }

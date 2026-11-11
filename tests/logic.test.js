@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import * as L from '../src/logic.js';
 import * as M from '../src/model.js';
-import { SPECIES, FENCES, BEDS, REWARD_DAYS, WATER_BY_AGE } from '../src/catalog.js';
+import { SPECIES, POTS, BEDS, REWARD_DAYS, WATER_BY_AGE } from '../src/catalog.js';
 
 const fixture = (name) => JSON.parse(readFileSync(new URL('./fixtures/' + name, import.meta.url)));
 const IDS = SPECIES.map((s) => s.id);
@@ -81,7 +81,7 @@ test('Belohnungen zählen Gartentage, nie Serien', () => {
   assert.equal(L.picksAvailable(7, 2), 0);
   assert.equal(L.nextRewardAt(7), 14);
   assert.equal(L.nextRewardAt(999), null);
-  assert.equal(REWARD_DAYS.length, FENCES.length - 1 + BEDS.length - 1, 'für jede Schwelle gibt es ein Teil');
+  assert.equal(REWARD_DAYS.length, POTS.length - 1 + BEDS.length - 1, 'für jede Schwelle gibt es ein Teil');
 });
 
 test('Tageszeit, Mond, Sicherung', () => {
@@ -94,17 +94,18 @@ test('Tageszeit, Mond, Sicherung', () => {
 });
 
 test('Katalog: IDs eindeutig, Tabelle aufsteigend', () => {
-  for (const list of [SPECIES, FENCES, BEDS, WATER_BY_AGE]) assert.equal(new Set(list.map((x) => x.id)).size, list.length);
+  for (const list of [SPECIES, POTS, BEDS, WATER_BY_AGE]) assert.equal(new Set(list.map((x) => x.id)).size, list.length);
   assert.ok(SPECIES.length >= 18);
   assert.ok(SPECIES.every((s) => ['single', 'multi', 'spike', 'bell', 'cactus', 'hang'].includes(s.form)));
   assert.deepEqual(WATER_BY_AGE.map((g) => g.maxAge), [...WATER_BY_AGE.map((g) => g.maxAge)].sort((a, b) => a - b));
 });
 
 test('Einstellungen und Tage werden bereinigt', () => {
-  const s = M.sanitizeSettings({ potName: '  Kübelchen  ', birthYear: 1800, weightKg: 'x', level: 'hart', sizes: [500, 150, 250], unlocked: ['fence:salbei', 'fence:salbei', 7] });
+  const s = M.sanitizeSettings({ potName: '  Kübelchen  ', birthYear: 1800, weightKg: 'x', level: 'hart', sizes: [500, 150, 250], unlocked: ['pot:salbei', 'fence:salbei', 7], fence: 'himmel' });
   assert.deepEqual([s.potName, s.birthYear, s.weightKg, s.level], ['Kübelchen', null, null, 'richtwert']);
   assert.deepEqual(s.sizes, [150, 250, 500]);
-  assert.deepEqual(s.unlocked, ['fence:salbei']);
+  assert.deepEqual(s.unlocked, ['pot:salbei'], 'alte Zaunfarben werden zu Kübel-Designs');
+  assert.equal(s.pot, 'himmel');
   assert.equal(M.sanitizeDay({ day: 'gestern' }), null);
   const d = M.sanitizeDay({ day: '2026-11-11', speciesId: 'tulpe', goalMl: 9, entries: [{ id: 'a', time: '09:00', ml: 250 }, { id: 'a', time: '09:05', ml: 250 }, { id: 'b', time: 'spät', ml: 250 }, { id: 'c', time: '10:00', ml: -5 }] });
   assert.equal(d.entries.length, 1);

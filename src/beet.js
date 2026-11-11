@@ -15,7 +15,6 @@ function sign(g, x, text, kind) {
 
 function drawRow(svg, row, ctx) {
   const bed = ctx.bed;
-  el('rect', { x: 8, y: SOIL_Y - 13, width: 314, height: 20, rx: 7, fill: '#7A5638' }, svg);
   const signs = el('g', {});
   let slot = 0;
   for (const item of row) {
@@ -27,8 +26,8 @@ function drawRow(svg, row, ctx) {
       t.textContent = MONTHS_SHORT[+item.month.slice(5, 7) - 1];
     } else if (item.type === 'gap') {
       const cx = x + SLOT_W / 2;
-      el('ellipse', { cx, cy: SOIL_Y - 9, rx: 52, ry: 9, fill: '#A9CC8E' }, svg);
-      for (let i = -3; i <= 3; i++) el('path', { d: `M${cx + i * 13} ${SOIL_Y - 10} q-3 -9 -5 -11 M${cx + i * 13} ${SOIL_Y - 10} q1 -10 3 -13 M${cx + i * 13} ${SOIL_Y - 10} q4 -7 7 -8`, fill: 'none', stroke: '#7FB36A', 'stroke-width': 1.6, 'stroke-linecap': 'round' }, svg);
+      el('ellipse', { cx, cy: SOIL_Y - 9, rx: 52, ry: 9, fill: 'url(#grasweg)' }, svg);
+      for (let i = -3; i <= 3; i++) el('path', { d: `M${cx + i * 13} ${SOIL_Y - 10} q-3 -9 -5 -11 M${cx + i * 13} ${SOIL_Y - 10} q1 -10 3 -13 M${cx + i * 13} ${SOIL_Y - 10} q4 -7 7 -8`, fill: 'none', stroke: '#4E9A3A', 'stroke-width': 1.6, 'stroke-linecap': 'round' }, svg);
       const same = item.from.slice(0, 7) === item.to.slice(0, 7);
       sign(signs, cx, same ? `${dd(item.from)}.–${dd(item.to)}.` : `${dd(item.from)}.${+item.from.slice(5, 7)}.–${dd(item.to)}.${+item.to.slice(5, 7)}.`, 'gap');
     } else if (item.type === 'empty') {
@@ -40,7 +39,7 @@ function drawRow(svg, row, ctx) {
       if (sp.form === 'hang') {
         const top = SOIL_Y - 128;
         el('path', { d: `M${x + 23} ${SOIL_Y - 4} V${top + 14} Q${x + 23} ${top} ${x + 11} ${top} Q${x} ${top} ${x} ${top + 9}`, fill: 'none', stroke: '#5B5148', 'stroke-width': 2.4, 'stroke-linecap': 'round' }, svg);
-        drawUnit(el('g', { transform: `translate(${x} ${top + 9 + 123 * 0.78}) scale(.78)` }, svg), sp, stage, { pot: d.potId, label: dd(d.day) });
+        drawUnit(el('g', { transform: `translate(${x} ${top + 9 + 123 * 0.78}) scale(.78)` }, svg), sp, stage, { pot: ctx.pot, label: dd(d.day) });
       } else {
         drawPlant(el('g', { transform: `translate(${x} ${SOIL_Y - 6}) scale(.9)` }, svg), sp, stage, false);
         sign(signs, x + 19, dd(d.day), 'day');
@@ -54,11 +53,10 @@ function drawRow(svg, row, ctx) {
     slot += item.type === 'gap' ? 2 : 1;
   }
   svg.appendChild(signs);
-  el('rect', { x: 4, y: SOIL_Y, width: 322, height: 18, rx: 3, fill: bed.color }, svg);
-  el('rect', { x: 4, y: SOIL_Y + 13, width: 322, height: 5, rx: 2.5, fill: bed.dark }, svg);
-  if (bed.id === 'stein') for (let i = 1; i < 8; i++) el('path', { d: `M${4 + i * 40} ${SOIL_Y + 1} v12`, stroke: bed.dark, 'stroke-width': 1.5 }, svg);
-  if (bed.id === 'weide') for (let i = 0; i < 27; i++) el('path', { d: `M${8 + i * 12} ${SOIL_Y + 13} l8 -12`, stroke: bed.dark, 'stroke-width': 1.5, 'stroke-linecap': 'round' }, svg);
-  if (bed.id === 'holz') el('path', { d: `M14 ${SOIL_Y + 6} h120 M170 ${SOIL_Y + 8} h140`, stroke: bed.dark, 'stroke-width': 1, opacity: 0.5, 'stroke-linecap': 'round' }, svg);
+  // Unter jeder Reihe ein gemalter Grasweg, davor eine schmale Beetkante in der gewählten Farbe.
+  el('rect', { x: -10, y: SOIL_Y + 3, width: 350, height: 22, fill: 'url(#grasweg)' }, svg);
+  el('rect', { x: -10, y: SOIL_Y, width: 350, height: 4, fill: bed.color }, svg);
+  el('rect', { x: -10, y: SOIL_Y + 3, width: 350, height: 1.5, fill: bed.dark }, svg);
 }
 
 /** Teilt die Dinge in Reihen zu fünf Plätzen. Eine Wiese braucht zwei Plätze. */
@@ -77,7 +75,7 @@ let observer = null;
 /**
  * @param {HTMLElement} root
  * @param {import('./logic.js').BedItem[]} items
- * @param {{bed:object, speciesOf:Function, stageOf:Function, labelOf:Function}} ctx
+ * @param {{bed:object, pot:object, speciesOf:Function, stageOf:Function, labelOf:Function}} ctx
  */
 export function renderBeet(root, items, ctx) {
   if (observer) observer.disconnect();
@@ -91,12 +89,4 @@ export function renderBeet(root, items, ctx) {
     const svg = el('svg', { viewBox: '0 0 330 164', 'aria-hidden': 'false' });
     svg.row = row; root.appendChild(svg); observer.observe(svg);
   }
-}
-
-/** Zaun als Kopf des Beets. */
-export function renderFence(root, fence) {
-  root.replaceChildren();
-  const svg = el('svg', { viewBox: '0 0 330 56', preserveAspectRatio: 'xMidYMax slice', 'aria-hidden': 'true' }, root);
-  el('rect', { x: 0, y: 24, width: 330, height: 4, fill: fence.line }, svg);
-  for (let i = 0; i < 12; i++) el('path', { d: `M${1 + i * 28} 56 V14 l9 -9 l9 9 V56 Z`, fill: fence.color, stroke: fence.line, 'stroke-width': 1 }, svg);
 }

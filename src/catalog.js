@@ -49,12 +49,12 @@ export const HEAT_ML = 500;
 export const REWARD_DAYS = [3, 7, 14, 30, 60, 100, 150];
 
 /** Gestaltung. Das jeweils erste Teil ist von Anfang an frei. */
-export const FENCES = [
-  { id: 'weiss', color: '#F6F0E4', line: '#D9CFBF' },
-  { id: 'salbei', color: '#B9CDB0', line: '#94AD8A' },
-  { id: 'himmel', color: '#BCD9EA', line: '#93B8CF' },
-  { id: 'rosa', color: '#F2C4CF', line: '#D99CAB' },
-  { id: 'honig', color: '#F0D28A', line: '#CFAE5F' },
+export const POTS = [
+  { id: 'terrakotta', color: '#D9825B', dark: '#BF6A45' },
+  { id: 'salbei', color: '#9CC196', dark: '#7CA176' },
+  { id: 'himmel', color: '#8FB3D1', dark: '#6F93B3' },
+  { id: 'rosa', color: '#D29ABB', dark: '#B37A9B' },
+  { id: 'honig', color: '#E6B25C', dark: '#C9943F' },
 ];
 export const BEDS = [
   { id: 'holz', color: '#B98A5E', dark: '#8F6540' },
