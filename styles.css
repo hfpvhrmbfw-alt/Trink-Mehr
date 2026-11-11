@@ -1,6 +1,6 @@
 /* Vergießmeinnicht: weiches Gartendesign. Farben als Token, Blätter (Dialoge) hell und dunkel. */
 :root {
-  --grass:#6FAE45; --wood:#B98A5E; --wood-dark:#8F6540; --ink:#2A1A12; --cream:#FFF8EC; --line:#E3D5C0;
+  --grass:#7DA56D; --wood:#B98A5E; --wood-dark:#8F6540; --ink:#2A1A12; --cream:#FFF8EC; --line:#E3D5C0;
   --paper:#FFF8EC; --paper-ink:#2A1A12; --paper-muted:#6B5A4C; --paper-sunken:#F3E8D6; --accent:#E8451C; --water:#3E97D6;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px); --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
   font-family:ui-rounded,"SF Pro Rounded","Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -24,16 +24,17 @@ svg text { font-family:inherit; }
 #scene, #scene svg { position:absolute; inset:0; width:100%; height:100%; display:block; }
 
 /* Kopf der Heute-Ansicht: klein und durchscheinend, damit die Pflanze wirkt */
-.glass-bg, .hud-main, .bubble, .glass, .nav, .beet-sky, .plaque { background:rgba(255,251,242,.62); -webkit-backdrop-filter:blur(12px) saturate(1.3); backdrop-filter:blur(12px) saturate(1.3); }
-.nacht .hud-main, .nacht .bubble, .nacht .glass, .nacht[data-view="heute"] .nav { background:rgba(12,28,66,.42); color:#EEF2FF; }
+/* Anzeigen als Papierkärtchen mit weichem Schatten, wie die Lagen der Szene */
+.hud-main, .bubble, .glass, .nav, .beet-sky, .plaque { background:#FBF6EC; box-shadow:0 2px 4px rgba(59,46,36,.2); }
+.nacht .hud-main, .nacht .bubble, .nacht .glass, .nacht[data-view="heute"] .nav { background:#34406B; color:#EEF2FF; box-shadow:0 2px 5px rgba(0,0,0,.35); }
 .hud { position:absolute; left:0; right:0; top:0; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:calc(var(--safe-t) + 10px) calc(var(--safe-r) + 14px) 0 calc(var(--safe-l) + 14px); }
-.hud-main { border:0; border-radius:16px; padding:6px 12px 7px; text-align:left; display:grid; justify-items:start; gap:1px; min-height:44px; color:#1D3A2A; }
+.hud-main { border:0; border-radius:16px; padding:6px 12px 7px; text-align:left; display:grid; justify-items:start; gap:1px; min-height:44px; color:#3B2E24; }
 .hud-main b { font-size:22px; line-height:1.1; font-weight:700; font-variant-numeric:tabular-nums; letter-spacing:-.01em; }
 .hud-row { font-size:12.5px; font-weight:500; opacity:.85; }
 .stage::before { content:" · "; }
-.glass { border:0; color:#1D3A2A; }
+.glass { border:0; color:#3B2E24; }
 .glass.round { width:40px; height:40px; border-radius:50%; display:grid; place-items:center; padding:0; margin:2px; }
-.bubble { position:absolute; left:50%; top:calc(var(--safe-t) + 72px); transform:translateX(-50%); margin:0; width:max-content; max-width:min(80%,300px); color:#1D3A2A; border-radius:14px; padding:6px 12px; font-size:14px; font-weight:500; text-align:center; }
+.bubble { position:absolute; left:50%; top:calc(var(--safe-t) + 72px); transform:translateX(-50%); margin:0; width:max-content; max-width:min(80%,300px); color:#3B2E24; border-radius:14px; padding:6px 12px; font-size:14px; font-weight:500; text-align:center; }
 .bubble:empty { display:none; }
 
 /* Knöpfe in Dialogen: Holzschilder, die nachgeben */
@@ -44,17 +45,19 @@ svg text { font-family:inherit; }
 .drops { position:absolute; left:0; right:0; bottom:calc(var(--safe-b) + 60px); display:flex; justify-content:center; align-items:flex-end; gap:14px; }
 .drop { border:0; background:none; padding:2px 4px; min-width:44px; min-height:44px; display:grid; place-items:end center; transition:transform .15s cubic-bezier(.3,1.8,.5,1); }
 .drop:active { transform:scale(.86) translateY(3px); }
-.drop svg { display:block; width:auto; filter:drop-shadow(0 2px 3px rgba(10,40,60,.3)); }
+.drop svg { display:block; width:auto; filter:drop-shadow(0 2px 2px rgba(59,46,36,.28)); }
 
 .nav { position:absolute; left:50%; bottom:calc(var(--safe-b) + 10px); transform:translateX(-50%); display:flex; padding:3px; border-radius:999px; z-index:3; }
 .tab { border:0; background:none; border-radius:999px; min-height:36px; min-width:76px; padding:6px 16px; font-size:14px; font-weight:600; color:inherit; }
-.nav { color:#1D3A2A; }
-.tab[aria-current="page"] { background:rgba(255,255,255,.92); color:#1D3A2A; box-shadow:0 1px 3px rgba(0,0,0,.12); }
+.nav { color:#3B2E24; }
+.tab[aria-current="page"] { background:#9EBE84; color:#2C3A24; }
 
 /* Beet: oben Himmel, Zaun und Hügel als Bild, darunter gemalte Erde, die mit den Reihen mitscrollt */
-.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:#5B3F2C url(bilder/erde.webp) 0 0 / 240px repeat; padding-bottom:calc(var(--safe-b) + 70px); }
-.beet-top { background:#2574BD url(bilder/beet.webp) center bottom / cover no-repeat; aspect-ratio:941/492; min-height:calc(var(--safe-t) + 170px); padding:calc(var(--safe-t) + 12px) 16px 0; }
-.beet-sky { max-width:300px; margin:0 auto; border-radius:16px; padding:8px 14px 10px; text-align:center; color:#1D3A2A; }
+.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:#8E6A4E; padding-bottom:calc(var(--safe-b) + 70px); }
+.beet-top { position:relative; padding:calc(var(--safe-t) + 12px) 16px 84px; background:#F4E7D4; }
+#beet-land { position:absolute; inset:0; width:100%; height:100%; display:block; }
+.beet-top > .beet-sky { position:relative; }
+.beet-sky { max-width:300px; margin:0 auto; border-radius:16px; padding:8px 14px 10px; text-align:center; color:#3B2E24; }
 .beet-sky h1 { margin:0; font-size:19px; font-weight:700; }
 .beet-sky p { margin:1px 0; font-size:13.5px; font-weight:500; }
 .beet-sky p:empty { display:none; }

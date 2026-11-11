@@ -1,8 +1,9 @@
-// Oberfläche: zeichnet Pflanzen und Kübel als SVG aus den Rezepten in catalog.js.
+// Oberfläche: zeichnet Pflanzen und Kübel als SVG aus den Rezepten in catalog.js, im Papierschnitt-Stil (flache Flächen, Schatten kommt vom Filter #lage).
 // Keine Logik, keine Daten. In Swift später als Path-Zeichner neu geschrieben (siehe docs/SWIFT.md).
 const NS = 'http://www.w3.org/2000/svg';
 export function el(tag, attrs, parent){ const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); if (parent) parent.appendChild(e); return e; }
-const GREEN = '#5FAE57', STEM = '#4F9A4A', WHITE = '#FFFFFF';
+// Papierfarben: gedämpfte Grüns, Blütenfarben werden leicht zum Papierton hin gemischt (soft).
+const GREEN = '#6E9F5C', STEM = '#4E8A4F', WHITE = '#FFFFFF', LIGHT = '#8DB874';
 let DETAIL = false;
 function shade(hex, f){ const n = parseInt(hex.slice(1),16), r = Math.round((n>>16)*f), g2 = Math.round(((n>>8)&255)*f), b = Math.round((n&255)*f); return '#'+((1<<24)+(r<<16)+(g2<<8)+b).toString(16).slice(1); }
 
@@ -22,8 +23,8 @@ function flower(g, x, y, sp, s, open){
   var f = el('g', {transform:'translate('+x+' '+y+')'}, g), k = sp.flower, i, a;
   var edge = sp.color === WHITE ? '#CFC8BC' : 'none';
   if (!open){
-    if (k === 'bell') { el('ellipse',{cx:0,cy:s*.3,rx:s*.2,ry:s*.34,fill:sp.color,stroke:edge,'stroke-width':.7},f); el('ellipse',{cx:0,cy:s*.08,rx:s*.2,ry:s*.16,fill:'#6CBF5D'},f); return; }
-    el('ellipse',{cx:0,cy:0,rx:s*.2,ry:s*.3,fill:'#6CBF5D'},f); el('ellipse',{cx:0,cy:-s*.15,rx:s*.12,ry:s*.16,fill:sp.color,stroke:edge,'stroke-width':.7},f); return;
+    if (k === 'bell') { el('ellipse',{cx:0,cy:s*.3,rx:s*.2,ry:s*.34,fill:sp.color,stroke:edge,'stroke-width':.7},f); el('ellipse',{cx:0,cy:s*.08,rx:s*.2,ry:s*.16,fill:LIGHT},f); return; }
+    el('ellipse',{cx:0,cy:0,rx:s*.2,ry:s*.3,fill:LIGHT},f); el('ellipse',{cx:0,cy:-s*.15,rx:s*.12,ry:s*.16,fill:sp.color,stroke:edge,'stroke-width':.7},f); return;
   }
   if (k === 'daisy' || k === 'sun'){
     var n = sp.petals || 16;
@@ -57,9 +58,9 @@ function stem(g, x0, y0, x1, y1, bend, w){
   if (DETAIL) el('path',{d:sd,fill:'none',stroke:'#8AD078','stroke-width':(w||2.6)*.3,'stroke-linecap':'round',transform:'translate(-0.7 0)'},g);
   return function(t){ var u = 1-t; return [u*u*x0+2*u*t*cx+t*t*x1, u*u*y0+2*u*t*cy+t*t*y1]; };
 }
-function sideLeaves(g, pt, sp, n, len){ for (var i = 0; i < n; i++){ var p = pt(.22 + i*.5/Math.max(n-1,1)*(n>1?1:0) + (n===1?.2:0)); leaf(g, p[0], p[1], i%2 ? -150 : -30, len*(1 - i*.08), sp.leaf||'oval', i%2 ? GREEN : '#6CBF5D'); } }
-function basal(g, H, full){ var L = Math.min(H*.62, 40); leaf(g,0,0,-60,L,'long',GREEN); leaf(g,0,0,-120,L,'long','#6CBF5D'); if (full) leaf(g,0,0,-82,L*.7,'long','#4F9A4A'); }
-function seedling(g){ stem(g,0,0,0,-11,2,2.2); el('ellipse',{cx:-5,cy:-13,rx:5.2,ry:2.9,fill:'#8FD06E',transform:'rotate(-25 -5 -13)'},g); el('ellipse',{cx:5,cy:-13,rx:5.2,ry:2.9,fill:'#8FD06E',transform:'rotate(25 5 -13)'},g); }
+function sideLeaves(g, pt, sp, n, len){ for (var i = 0; i < n; i++){ var p = pt(.22 + i*.5/Math.max(n-1,1)*(n>1?1:0) + (n===1?.2:0)); leaf(g, p[0], p[1], i%2 ? -150 : -30, len*(1 - i*.08), sp.leaf||'oval', i%2 ? GREEN : LIGHT); } }
+function basal(g, H, full){ var L = Math.min(H*.62, 40); leaf(g,0,0,-60,L,'long',GREEN); leaf(g,0,0,-120,L,'long',LIGHT); if (full) leaf(g,0,0,-82,L*.7,'long',STEM); }
+function seedling(g){ stem(g,0,0,0,-11,2,2.2); el('ellipse',{cx:-5,cy:-13,rx:5.2,ry:2.9,fill:'#A3C98A',transform:'rotate(-25 -5 -13)'},g); el('ellipse',{cx:5,cy:-13,rx:5.2,ry:2.9,fill:'#A3C98A',transform:'rotate(25 5 -13)'},g); }
 
 function plant(g, sp, stage){
   if (stage <= 0) return;
@@ -73,21 +74,21 @@ function plant(g, sp, stage){
       var c1 = [sg*(outer ? 40 : 30), -8], c2 = [sg*(outer ? 42 : 33), len*.4];
       el('path',{d:'M'+x0+' 0 C'+c1[0]+' '+c1[1]+' '+c2[0]+' '+c2[1]+' '+ex+' '+len,fill:'none',stroke:STEM,'stroke-width':2.2,'stroke-linecap':'round'},g);
       var bz = function(t){ var u = 1-t; return [u*u*u*x0+3*u*u*t*c1[0]+3*u*t*t*c2[0]+t*t*t*ex, 3*u*u*t*c1[1]+3*u*t*t*c2[1]+t*t*t*len]; };
-      [.3,.5,.7,.88].forEach(function(t, j){ if (!full && j > 1) return; var q = bz(full ? t : t*1.1); leaf(g, q[0], q[1], (j%2 ? 1 : -1)*(k>0?1:-1) > 0 ? 20 : 160, sp.leaf === 'round' ? 8 : 10, sp.leaf, j%2 ? GREEN : '#6CBF5D'); });
+      [.3,.5,.7,.88].forEach(function(t, j){ if (!full && j > 1) return; var q = bz(full ? t : t*1.1); leaf(g, q[0], q[1], (j%2 ? 1 : -1)*(k>0?1:-1) > 0 ? 20 : 160, sp.leaf === 'round' ? 8 : 10, sp.leaf, j%2 ? GREEN : LIGHT); });
       if (full){
         var e = bz(1), mid = bz(.58);
         if (sp.fruit && open && Math.abs(k) === 1) berry(g, e[0], e[1]+2); else flower(g, e[0], e[1] + (sp.flower==='bell'?0:2), sp, sp.size, open);
         if (!outer) flower(g, mid[0] + sg*4, mid[1], sp, sp.size*.85, open);
       }
     });
-    for (i = -1; i <= 1; i++) leaf(g, i*8, 0, -90 + i*35, 11, sp.leaf, i ? '#6CBF5D' : GREEN);
+    for (i = -1; i <= 1; i++) leaf(g, i*8, 0, -90 + i*35, 11, sp.leaf, i ? LIGHT : GREEN);
     return;
   }
   if (sp.form === 'cactus'){
     var rx = full ? 15 : 10, ry = full ? 27 : 15;
-    if (full){ el('path',{d:'M12 -22 Q26 -22 25 -38',fill:'none',stroke:'#58A46A','stroke-width':9,'stroke-linecap':'round'},g); }
-    el('ellipse',{cx:0,cy:-ry+3,rx:rx,ry:ry,fill:'#58A46A'},g);
-    el('path',{d:'M-'+rx*.4+' -3 Q-'+rx*.75+' '+(-ry)+' -'+rx*.3+' '+(-ry*2+6)+' M'+rx*.4+' -3 Q'+rx*.75+' '+(-ry)+' '+rx*.3+' '+(-ry*2+6),fill:'none',stroke:'#3F8C52','stroke-width':1.4,'stroke-linecap':'round'},g);
+    if (full){ el('path',{d:'M12 -22 Q26 -22 25 -38',fill:'none',stroke:'#6E9F6A','stroke-width':9,'stroke-linecap':'round'},g); }
+    el('ellipse',{cx:0,cy:-ry+3,rx:rx,ry:ry,fill:'#6E9F6A'},g);
+    el('path',{d:'M-'+rx*.4+' -3 Q-'+rx*.75+' '+(-ry)+' -'+rx*.3+' '+(-ry*2+6)+' M'+rx*.4+' -3 Q'+rx*.75+' '+(-ry)+' '+rx*.3+' '+(-ry*2+6),fill:'none',stroke:'#557F55','stroke-width':1.4,'stroke-linecap':'round'},g);
     for (i = 0; i < (full ? 7 : 4); i++){ var yy = -6 - i*(ry*2-10)/(full?7:4), xx = (i%2 ? 1 : -1)*rx*.15; el('path',{d:'M'+(xx-2)+' '+yy+' l4 -2 M'+(xx-2)+' '+(yy-2)+' l4 2',stroke:'#F4F1E8','stroke-width':.9,'stroke-linecap':'round'},g); }
     if (full) flower(g, 0, -ry*2 + 3 - (open ? 3 : 2), sp, sp.size, open);
     return;
@@ -98,7 +99,7 @@ function plant(g, sp, stage){
     if (sp.basal) basal(g,H,full); else sideLeaves(g, pt, sp, full ? (sp.leaves||2) : 2, sp.leaf === 'heart' ? 20 : 15);
     if (full) flower(g,5,-H,sp,sp.size,open);
   } else if (sp.form === 'multi'){
-    [-1,0,1].forEach(function(k){ var ex = k*17, ey = -H*(k ? .8 : 1); var q = stem(g,k*2,0,ex,ey,k*5,2.2); if (!sp.basal){ p = q(.45); leaf(g,p[0],p[1],k<0?-150:-30,sp.leaf==='round'?9:13,sp.leaf,k?'#6CBF5D':GREEN); } if (full) flower(g,ex,ey,sp,sp.size,open); });
+    [-1,0,1].forEach(function(k){ var ex = k*17, ey = -H*(k ? .8 : 1); var q = stem(g,k*2,0,ex,ey,k*5,2.2); if (!sp.basal){ p = q(.45); leaf(g,p[0],p[1],k<0?-150:-30,sp.leaf==='round'?9:13,sp.leaf,k?LIGHT:GREEN); } if (full) flower(g,ex,ey,sp,sp.size,open); });
     if (sp.basal) basal(g,H,full); else { leaf(g,0,0,-20,sp.leaf==='round'?10:14,sp.leaf,GREEN); leaf(g,0,0,-160,sp.leaf==='round'?10:14,sp.leaf,GREEN); }
   } else if (sp.form === 'spike'){
     var K = sp.stems || 1;
@@ -119,15 +120,18 @@ function plant(g, sp, stage){
 function pot(g, o){
   var p = o.pot || { id: 'terrakotta' };
   if (o.hang){ el('path',{d:'M-22 2 L0 -44 L22 2',fill:'none',stroke:'#8A6F5A','stroke-width':1.6,'stroke-linejoin':'round'},g); el('circle',{cx:0,cy:-45,r:2.6,fill:'none',stroke:'#8A6F5A','stroke-width':1.6},g); }
-  // Gemalter Kübel (von Anna), andere Designs per Farbfilter aus index.html (#k-<id>). Höhe 46: Rand oben bei -2, Boden bei 44.
-  el('image',{href:'bilder/kuebel.webp',x:-22.3,y:-2,width:44.6,height:46,filter:p.id === 'terrakotta' ? 'none' : 'url(#k-'+p.id+')'},g);
-  if (o.label != null){ var t = el('text',{x:0,y:33,'text-anchor':'middle','font-family':'IBM Plex Mono, monospace','font-weight':600,'font-size':14,fill:'#2A1A12'},g); t.textContent = o.label; }
+  // Kübel aus zwei Papierlagen: Körper und Rand, Erde als dunkler Schlitz.
+  var c = [p.color || '#D9875C', p.dark || '#C47149'];
+  el('path',{d:'M-22 6 L22 6 L18 44 L-18 44 Z',fill:c[0]},g);
+  el('rect',{x:-26,y:-2,width:52,height:10,rx:2.5,fill:c[1]},g);
+  el('ellipse',{cx:0,cy:-1,rx:22,ry:2.4,fill:'#7A563C'},g);
+  if (o.label != null){ var t = el('text',{x:0,y:30,'text-anchor':'middle','font-family':'IBM Plex Mono, monospace','font-weight':600,'font-size':14,fill:'#2A1A12'},g); t.textContent = o.label; }
   else if (o.mood){
-    var eyes = o.mood === 'schlaf' ? 'M-10 24 q2.5 2.5 5 0 M5 24 q2.5 2.5 5 0' : o.mood === 'froh' ? 'M-10 25 q2.5 -4 5 0 M5 25 q2.5 -4 5 0' : '';
-    if (eyes) el('path',{d:eyes,fill:'none',stroke:'#3A2216','stroke-width':1.8,'stroke-linecap':'round'},g);
-    else { el('circle',{cx:-7.5,cy:24,r:2.1,fill:'#3A2216'},g); el('circle',{cx:7.5,cy:24,r:2.1,fill:'#3A2216'},g); }
-    el('path',{d:o.mood === 'schlaf' ? 'M-2.5 32 h5' : 'M-4 30.5 q4 4.5 8 0',fill:'none',stroke:'#3A2216','stroke-width':1.8,'stroke-linecap':'round'},g);
-    el('ellipse',{cx:-12,cy:29.5,rx:3.4,ry:2,fill:'#FF8FA8',opacity:.55},g); el('ellipse',{cx:12,cy:29.5,rx:3.4,ry:2,fill:'#FF8FA8',opacity:.55},g);
+    var eyes = o.mood === 'schlaf' ? 'M-10 20 q2.5 2.5 5 0 M5 20 q2.5 2.5 5 0' : o.mood === 'froh' ? 'M-10 21 q2.5 -4 5 0 M5 21 q2.5 -4 5 0' : '';
+    if (eyes) el('path',{d:eyes,fill:'none',stroke:'#3B2E24','stroke-width':1.8,'stroke-linecap':'round'},g);
+    else { el('circle',{cx:-7.5,cy:20,r:2.1,fill:'#3B2E24'},g); el('circle',{cx:7.5,cy:20,r:2.1,fill:'#3B2E24'},g); }
+    el('path',{d:o.mood === 'schlaf' ? 'M-2.5 28 h5' : 'M-4 26.5 q4 4.5 8 0',fill:'none',stroke:'#3B2E24','stroke-width':1.8,'stroke-linecap':'round'},g);
+    el('ellipse',{cx:-12,cy:25.5,rx:3.4,ry:2,fill:'#EE9C93',opacity:.75},g); el('ellipse',{cx:12,cy:25.5,rx:3.4,ry:2,fill:'#EE9C93',opacity:.75},g);
   }
 }
 /* Zeichnet Kübel + Pflanze in eine Gruppe; Ursprung = Bodenmitte der Zelle (72 breit, 178 hoch, y von -128 bis 50) */
@@ -141,7 +145,9 @@ function unit(parent, sp, stage, o){
   return {g:g, plant:inner, hang:hang};
 }
 
-/** Pflanze ohne Kübel (fürs Beet). detail=false zeichnet die vereinfachte Stufe. */
-export function drawPlant(g, sp, stage, detail){ DETAIL = !!detail; try { plant(g, sp, stage); } finally { DETAIL = false; } }
-/** Kübel mit Pflanze. Rückgabe: {g, plant, hang}. o: {pot:{id} aus POTS, label, mood, detail} */
-export function drawUnit(parent, sp, stage, o){ DETAIL = !!(o && o.detail); try { return unit(parent, sp, stage, o); } finally { DETAIL = false; } }
+const SOFT = '#F4E7D4', softHex = (h) => { if (!h || h[0] !== '#') return h; const a = [1,3,5].map((i) => parseInt(h.slice(i,i+2),16)), b = [1,3,5].map((i) => parseInt(SOFT.slice(i,i+2),16)); return '#' + a.map((v,i) => Math.round(v + (b[i]-v)*.18).toString(16).padStart(2,'0')).join(''); };
+const soft = (sp) => sp && Object.assign({}, sp, { color: sp.color === WHITE ? '#FFFDF7' : softHex(sp.color), color2: softHex(sp.color2) });
+/** Pflanze ohne Kübel (fürs Beet). */
+export function drawPlant(g, sp, stage){ plant(g, soft(sp), stage); }
+/** Kübel mit Pflanze. Rückgabe: {g, plant, hang}. o: {pot:{color,dark} aus POTS, label, mood} */
+export function drawUnit(parent, sp, stage, o){ return unit(parent, soft(sp), stage, o); }
