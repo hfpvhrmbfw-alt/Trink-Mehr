@@ -1,6 +1,6 @@
 /* Vergießmeinnicht: weiches Gartendesign. Farben als Token, Blätter (Dialoge) hell und dunkel. */
 :root {
-  --grass:#B7D69E; --wood:#B98A5E; --wood-dark:#8F6540; --ink:#2A1A12; --cream:#FFF8EC; --line:#E3D5C0;
+  --grass:#96D053; --wood:#B98A5E; --wood-dark:#8F6540; --ink:#2A1A12; --cream:#FFF8EC; --line:#E3D5C0;
   --paper:#FFF8EC; --paper-ink:#2A1A12; --paper-muted:#6B5A4C; --paper-sunken:#F3E8D6; --accent:#E8451C; --water:#3E97D6;
   --safe-t:env(safe-area-inset-top,0px); --safe-b:env(safe-area-inset-bottom,0px); --safe-l:env(safe-area-inset-left,0px); --safe-r:env(safe-area-inset-right,0px);
   font-family:ui-rounded,"SF Pro Rounded","Nunito",system-ui,-apple-system,"Segoe UI",sans-serif;
@@ -25,11 +25,10 @@ svg text { font-family:inherit; }
 
 /* Kopf der Heute-Ansicht */
 .hud { position:absolute; left:0; right:0; top:0; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; padding:calc(var(--safe-t) + 14px) calc(var(--safe-r) + 16px) 0 calc(var(--safe-l) + 16px); }
-.hud-main { border:0; background:none; padding:0; text-align:left; display:grid; justify-items:start; gap:2px; min-height:44px; color:#173A2A; transition:color 1s; }
-.dark .hud-main { color:#F3F0E6; }
+.hud-main { border:0; background:rgba(255,248,236,.82); border-radius:18px; padding:8px 14px 10px; text-align:left; display:grid; justify-items:start; gap:2px; min-height:44px; color:#173A2A; }
 .hud-main b { font-size:34px; line-height:1; font-variant-numeric:tabular-nums; }
 .hud-main span { font-size:14px; font-weight:600; }
-.stage { margin-top:4px; background:rgba(255,248,236,.85); color:var(--ink); border-radius:999px; padding:3px 10px; }
+.stage { margin-top:4px; background:#fff; color:var(--ink); border-radius:999px; padding:3px 10px; }
 .bubble { position:absolute; left:50%; top:calc(var(--safe-t) + 118px); transform:translateX(-50%); margin:0; width:max-content; max-width:min(86%,340px); background:rgba(255,248,236,.92); color:var(--ink); border-radius:16px; padding:8px 14px; font-size:15px; font-weight:600; text-align:center; box-shadow:0 2px 0 rgba(42,26,18,.12); }
 .bubble:empty { display:none; }
 
@@ -49,15 +48,17 @@ svg text { font-family:inherit; }
 .nav .sign { min-width:120px; }
 
 /* Beet */
-.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:var(--grass); padding-bottom:calc(var(--safe-b) + 84px); }
-#beet-fence { background:#DCEBEE; }
-.beet-sky { background:#DCEBEE; padding:calc(var(--safe-t) + 18px) 20px 6px; text-align:center; color:#173A2A; }
+.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:#7CC047; padding-bottom:calc(var(--safe-b) + 84px); }
+.beet-top { background:#2574BD url(bilder/beet.webp) center bottom / cover no-repeat; }
+.beet-sky { padding:calc(var(--safe-t) + 18px) 20px 6px; text-align:center; color:#173A2A; }
 .beet-sky h1 { margin:0; font-size:26px; }
+.beet-sky h1, .beet-sky p { width:max-content; max-width:100%; margin-inline:auto !important; background:rgba(255,248,236,.82); border-radius:12px; padding:2px 12px; }
+.beet-sky p:empty { display:none; }
 .beet-sky p { margin:2px 0; font-weight:600; }
 .beet-sky .small { font-size:14px; font-weight:500; min-height:20px; }
 .beet-sky .sign { margin:8px 0 4px; background:var(--cream); }
 #beet-fence svg { display:block; width:100%; height:64px; }
-.beet-ground { background:var(--grass); min-height:60%; padding:10px 6px 0; }
+.beet-ground { background:linear-gradient(var(--grass), #7CC047 320px); min-height:60%; padding:10px 6px 0; }
 #beet-rows svg { display:block; width:100%; height:auto; aspect-ratio:330/164; }
 .plaque { margin:18px auto; max-width:300px; background:var(--cream); border-radius:14px; padding:14px 16px; text-align:center; font-weight:600; box-shadow:0 3px 0 rgba(42,26,18,.15); }
 

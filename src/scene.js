@@ -1,11 +1,12 @@
-// Oberfläche: die Heute-Szene (Himmel nach Tageszeit, Zaun, Kübel, Gießkanne). Zeichnet nur, rechnet nichts.
+// Oberfläche: die Heute-Szene (gemalter Hintergrund nach Tageszeit, Zaun, Kübel, Gießkanne). Zeichnet nur, rechnet nichts.
 import { el, drawUnit } from './plants.js';
 
+// light: Farbfaktoren (R, G, B) für alles Gezeichnete, damit es zum gemalten Hintergrund der Tageszeit passt.
 const PHASES = {
-  morgen: { sky: '#FBDCCB', sun: [36, 300], sunColor: '#FFD36E', sunOn: 1, glow: 0.8, cloud: 0.7, tint: ['#FFB7A0', 0.1], star: 0, fly: 0 },
-  mittag: { sky: '#CFE9F7', sun: [212, 248], sunColor: '#FFE07A', sunOn: 1, glow: 0, cloud: 1, tint: ['#FFFFFF', 0], star: 0, fly: 0 },
-  abend: { sky: '#F7C08F', sun: [222, 330], sunColor: '#FF9E57', sunOn: 1, glow: 0.9, cloud: 0.5, tint: ['#FF7A3D', 0.16], star: 0.25, fly: 1 },
-  nacht: { sky: '#1B2550', sun: [222, 430], sunColor: '#FF9E57', sunOn: 0, glow: 0, cloud: 0.07, tint: ['#16204A', 0.5], star: 1, fly: 0.6 },
+  morgen: { sun: [40, 236], sunColor: '#FFD9A0', sunOn: 1, light: [1, 0.93, 0.9], grass: '#6F9A5E', star: 0, fly: 0 },
+  mittag: { sun: [212, 236], sunColor: '#FFE07A', sunOn: 1, light: null, grass: '#6FB045', star: 0, fly: 0 },
+  abend: { sun: [222, 258], sunColor: '#FFB25E', sunOn: 1, light: [1, 0.86, 0.68], grass: '#8A8A3A', star: 0.2, fly: 1 },
+  nacht: { sun: [222, 430], sunColor: '#FF9E57', sunOn: 0, light: [0.4, 0.58, 0.82], grass: '#12586A', star: 1, fly: 0.6 },
 };
 const again = (node, cls) => { node.classList.remove(cls); void node.getBoundingClientRect(); node.classList.add(cls); };
 
@@ -16,34 +17,37 @@ const again = (node, cls) => { node.classList.remove(cls); void node.getBounding
 export function createScene(root, on) {
   const S = el('svg', { viewBox: '0 0 260 560', preserveAspectRatio: 'xMidYMax slice', 'aria-hidden': 'true' });
   root.appendChild(S);
-  const sky = el('rect', { x: -200, y: -400, width: 660, height: 1000, class: 'fade' }, S);
-  const glow = el('ellipse', { cx: 130, cy: 390, rx: 230, ry: 100, fill: '#FFE9B8', class: 'fade' }, S);
+  // Gemalte Hintergründe: je Tageszeit ein Bild, gleiche Landschaft, weich überblendet. Geladen wird erst bei Bedarf.
+  const sky = el('g', {}, S), bg = {};
+  for (const name of Object.keys(PHASES)) bg[name] = el('image', { x: -46, y: -65, width: 352, height: 625, preserveAspectRatio: 'xMidYMid slice', class: 'fade', opacity: 0 }, sky);
   const shoot = el('g', {}, S);
   const sun = el('g', { class: 'sun' }, S), sunSize = el('g', {}, sun), rays = el('g', { class: 'rays' }, sunSize);
   for (let i = 0; i < 6; i++) el('path', { d: 'M-9 0 L0 -190 L9 0 Z', fill: '#FFF6C9', opacity: 0.2, transform: `rotate(${i * 60 + 15})` }, rays);
   for (let i = 0; i < 12; i++) el('path', { d: 'M-4 -26 L0 -40 L4 -26 Z', transform: `rotate(${i * 30})`, class: 'ray' }, rays);
   const disc = el('circle', { cx: 0, cy: 0, r: 22 }, sunSize);
   el('path', { d: 'M-8 -2 q2 -4 4 0 M4 -2 q2 -4 4 0 M-6 6 q6 6 12 0', fill: 'none', stroke: '#B5651D', 'stroke-width': 1.8, 'stroke-linecap': 'round' }, sunSize);
-  const clouds = el('g', { class: 'fade drift' }, S);
-  [[40, 250, 1], [118, 222, 0.7]].forEach(([x, y, s]) => { const g = el('g', { transform: `translate(${x} ${y}) scale(${s})` }, clouds); [[0, 0, 16], [18, -6, 20], [38, 0, 15], [18, 6, 22]].forEach(([cx, cy, r]) => el('ellipse', { cx, cy, rx: r, ry: r * 0.62, fill: '#FFFFFF' }, g)); });
-  const rail = el('rect', { x: -200, y: 356, width: 660, height: 4 }, S);
-  const pickets = el('g', {}, S);
+  const drawn = el('g', {}, S);
+  const light = el('feColorMatrix', { type: 'matrix' }, el('filter', { id: 'licht', 'color-interpolation-filters': 'sRGB' }, S));
+  const rail = el('rect', { x: -200, y: 356, width: 660, height: 4 }, drawn);
+  const pickets = el('g', {}, drawn);
   for (let i = -7; i < 16; i++) el('path', { d: `M${4 + i * 29} 386 V342 l9 -9 l9 9 V386 Z`, 'stroke-width': 1 }, pickets);
-  el('rect', { x: -200, y: 378, width: 660, height: 400, fill: '#B7D69E' }, S);
-  const hook = el('path', { d: 'M186 420 V224 Q186 204 158 204 Q130 204 130 213', fill: 'none', stroke: '#5B5148', 'stroke-width': 3, 'stroke-linecap': 'round' }, S);
-  const shadow = el('ellipse', { cx: 130, cy: 421, rx: 44, ry: 6, fill: '#000', opacity: 0.12 }, S);
-  const potWrap = el('g', { transform: 'translate(130 365) scale(1.25)' }, S), potWob = el('g', { class: 'tap' }, potWrap);
+  // Grasbüschel verdecken den Fuß des Zauns, damit er in der gemalten Wiese steht.
+  const tufts = el('g', { class: 'fade' }, S);
+  for (let i = -8; i < 40; i++) { const x = i * 9 + (i % 3) * 2, h = 9 + (i * 7 % 5) * 2; el('path', { d: `M${x - 5} 392 Q${x - 4} ${386 - h / 2} ${x - 6} ${386 - h} Q${x} ${388 - h / 2} ${x + 1} 392 Q${x + 3} ${384 - h / 2} ${x + 6} ${388 - h} Q${x + 6} 388 ${x + 7} 392 Z` }, tufts); }
+  const front = el('g', {}, S);
+  const hook = el('path', { d: 'M186 420 V224 Q186 204 158 204 Q130 204 130 213', fill: 'none', stroke: '#5B5148', 'stroke-width': 3, 'stroke-linecap': 'round' }, front);
+  const shadow = el('ellipse', { cx: 130, cy: 421, rx: 44, ry: 6, fill: '#0B2A1E', opacity: 0.28 }, S);
+  const potWrap = el('g', { transform: 'translate(130 365) scale(1.25)' }, front), potWob = el('g', { class: 'tap' }, potWrap);
   const dew = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
   [[108, 368], [150, 366], [131, 373]].forEach(([cx, cy]) => el('ellipse', { cx, cy, rx: 2.2, ry: 2.8, fill: '#CDEBFF', stroke: '#FFFFFF', 'stroke-width': 0.6 }, dew));
   const visitor = el('g', { class: 'hover', 'pointer-events': 'none' }, S), bf = el('g', { transform: 'translate(176 262)' }, visitor);
   el('ellipse', { cx: -5, cy: 0, rx: 5, ry: 7, fill: '#FFB347', class: 'flap' }, bf); el('ellipse', { cx: 5, cy: 0, rx: 5, ry: 7, fill: '#FF8A5B', class: 'flap' }, bf); el('rect', { x: -0.8, y: -5, width: 1.6, height: 10, rx: 0.8, fill: '#2A1A12' }, bf);
-  const tint = el('rect', { x: -200, y: -400, width: 660, height: 1400, class: 'fade', 'pointer-events': 'none' }, S);
   const stars = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
-  [[24, 196], [52, 150], [78, 228], [36, 262], [92, 174], [18, 316], [66, 296], [176, 172], [232, 232], [204, 280], [240, 306], [186, 316], [222, 150], [40, 120], [150, 134], [112, 110], [244, 104], [14, 232], [200, 90], [70, 70]].forEach(([cx, cy], n) => { const c = el('circle', { cx, cy, r: n % 3 ? 1.3 : 2, fill: '#FFF6D6', class: 'twinkle' }, stars); c.style.animationDelay = ((n * 0.37) % 2.4) + 's'; });
+  [[24, 196], [52, 150], [78, 228], [36, 262], [92, 174], [18, 316], [66, 296], [176, 172], [232, 232], [204, 280], [240, 306], [186, 316], [222, 150], [40, 120], [150, 134], [112, 110], [244, 104], [14, 232], [200, 90], [70, 70]].forEach(([cx, y], n) => { const cy = y > 262 ? y - 190 : y; const c = el('circle', { cx, cy, r: n % 3 ? 1.3 : 2, fill: '#FFF6D6', class: 'twinkle' }, stars); c.style.animationDelay = ((n * 0.37) % 2.4) + 's'; });
   const moon = el('g', { class: 'fade', transform: 'translate(210 252)', 'pointer-events': 'none' }, S);
   el('circle', { cx: 0, cy: 0, r: 16 }, el('clipPath', { id: 'moonclip' }, moon));
   el('circle', { cx: 0, cy: 0, r: 16, fill: '#F4EFD8' }, moon); el('circle', { cx: -5, cy: -4, r: 3, fill: '#E2DBBE' }, moon); el('circle', { cx: 5, cy: 6, r: 2.2, fill: '#E2DBBE' }, moon);
-  const moonDark = el('circle', { cy: 0, r: 16.5, fill: '#1B2550', opacity: 0.93, 'clip-path': 'url(#moonclip)' }, moon);
+  const moonDark = el('circle', { cy: 0, r: 16.5, fill: '#00266B', opacity: 0.93, 'clip-path': 'url(#moonclip)' }, moon);
   const flies = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
   [[40, 330], [84, 372], [190, 350], [226, 384], [150, 316]].forEach(([cx, cy], n) => { const c = el('circle', { cx, cy, r: 2.2, fill: '#FFE98A', class: 'fly twinkle' }, flies); c.style.animationDelay = n * 0.9 + 's'; });
   const zz = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
@@ -69,11 +73,13 @@ export function createScene(root, on) {
     update(v) {
       phase = v.phase;
       const c = PHASES[v.phase], hang = v.species.form === 'hang';
-      sky.style.fill = c.sky; glow.style.opacity = c.glow; clouds.style.opacity = c.cloud;
+      if (!bg[v.phase].getAttribute('href')) bg[v.phase].setAttribute('href', `bilder/${v.phase}.webp`);
+      for (const name in bg) bg[name].style.opacity = name === v.phase ? 1 : 0;
+      if (c.light) { light.setAttribute('values', `${c.light[0]} 0 0 0 0 0 ${c.light[1]} 0 0 0 0 0 ${c.light[2]} 0 0 0 0 0 1 0`); for (const g of [drawn, front]) g.setAttribute('filter', 'url(#licht)'); } else for (const g of [drawn, front]) g.removeAttribute('filter');
+      tufts.style.fill = c.grass;
       sun.style.transform = `translate(${c.sun[0]}px,${c.sun[1]}px)`; sun.style.opacity = c.sunOn; disc.setAttribute('fill', c.sunColor);
       sunSize.setAttribute('transform', `scale(${v.heat ? 1.35 : 1})`);
       rays.querySelectorAll('.ray').forEach((r) => r.setAttribute('fill', c.sunColor));
-      tint.style.fill = c.tint[0]; tint.style.opacity = c.tint[1];
       stars.style.opacity = c.star; flies.style.opacity = c.fly;
       moon.style.opacity = v.phase === 'nacht' ? 1 : 0; zz.style.opacity = v.phase === 'nacht' ? 1 : 0;
       moonDark.setAttribute('cx', v.moon < 0.5 ? -64 * v.moon : 64 * (1 - v.moon));
