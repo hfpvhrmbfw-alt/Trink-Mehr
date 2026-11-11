@@ -6,7 +6,7 @@ import { SPECIES, POTS, BEDS, SPORT_ML_PER_30_MIN, HEAT_ML } from './catalog.js'
 import * as T from './texts.js';
 import { createScene } from './scene.js';
 import { renderBeet } from './beet.js';
-import { drawBeetHead } from './papier.js';
+import { drawBeetHead, LIGHT, PAPER } from './papier.js';
 
 const $ = (id) => document.getElementById(id);
 const SPECIES_BY_ID = Object.fromEntries(SPECIES.map((s) => [s.id, s]));
@@ -63,6 +63,7 @@ function renderToday(keepSaying) {
     pot: byId(POTS, state.settings.pot), moon: L.moonPhase(c.stamp / 86400000),
   });
   $('app').classList.toggle('nacht', phase === 'nacht');
+  paintTop();
   $('ml').textContent = fmt(L.dayTotalMl(d));
   $('sub').textContent = 'von ' + fmt(L.dayGoalMl(d)) + (L.extraMl(d) ? ' mit Zuschlag' : '');
   $('stage').textContent = st === 4 ? T.SPECIES_NAMES[sp.id] : T.STAGE_NAMES[st];
@@ -71,7 +72,7 @@ function renderToday(keepSaying) {
 }
 function renderDrops() {
   $('drops').innerHTML = state.settings.sizes.map((ml, i) => `<button class="drop" type="button" data-ml="${ml}" aria-label="${ml} Milliliter eintragen">
-    <svg viewBox="0 0 40 52" height="${[36, 44, 54][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="#6AAED4"/><ellipse cx="11.5" cy="27" rx="2.6" ry="4.6" transform="rotate(25 11.5 27)" fill="#B6DCF0"/><text x="20" y="38" text-anchor="middle" font-weight="600" font-size="${ml > 999 ? 9 : 10.5}" fill="#fff">${ml}</text></svg></button>`).join('');
+    <svg viewBox="0 0 40 52" height="${[36, 44, 54][i]}" aria-hidden="true"><path d="M20 2 C17 10 3 24 3 34 A17 17 0 0 0 37 34 C37 24 23 10 20 2 Z" fill="#6AAED4"/><ellipse cx="13" cy="19" rx="1.8" ry="3.4" transform="rotate(28 13 19)" fill="#B6DCF0"/><text x="20" y="41" text-anchor="middle" font-weight="600" font-size="${ml > 999 ? 9 : 10.5}" fill="#fff">${ml}</text></svg></button>`).join('');
 }
 async function addEntry(ml, d) {
   if (L.isFull(d)) { say(pick(T.SAYINGS.voll), 2500); return; }
@@ -112,11 +113,21 @@ function renderBeetView() {
   });
   requestAnimationFrame(() => { $('beet').scrollTop = $('beet').scrollHeight; });
 }
+// Hinter der Statusleiste liegt immer die Farbe, die oben im Bild ist (auf jedem iPhone, mit und ohne Notch).
+function paintTop() {
+  const color = state.view === 'heute' ? LIGHT[L.phaseOf(clock().hour)].sky : state.view === 'beet' ? PAPER.sky : getComputedStyle(document.documentElement).getPropertyValue('--paper').trim();
+  document.documentElement.style.background = document.body.style.background = color;
+  document.querySelector('meta[name=theme-color]').setAttribute('content', color);
+}
 function show(view) {
   state.view = view; $('app').dataset.view = view;
-  $('heute').hidden = view !== 'heute'; $('beet').hidden = view !== 'beet';
+  for (const v of ['heute', 'beet', 'einst']) $(v).hidden = view !== v;
+  if (view === 'einst') $('toast').hidden = true;
+  paintTop();
   document.querySelectorAll('.nav button').forEach((b) => b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'));
   if (view === 'beet') renderBeetView();
+  if (view === 'einst' && !$('form')) openSettings(false);
+  if (view !== 'einst') $('einst-body').replaceChildren();
 }
 function refresh() {
   renderToday(); renderDrops();
@@ -177,8 +188,10 @@ function swatches(kind, list, names) {
 }
 function openSettings(first) {
   const s = state.settings, year = clock().year;
-  const body = sheet(`<form id="form" novalidate>
-    <h2>${first ? 'Willkommen im Garten' : 'Gartenschild'}</h2>
+  const body = $('einst-body');
+  $('app').classList.toggle('erst', !!first);
+  body.innerHTML = `<form id="form" novalidate>
+    <h1>${first ? 'Willkommen im Garten' : 'Einstellungen'}</h1>
     ${first ? '<p class="lead">Jeden Morgen steht hier ein Kübel mit frischer Erde. Mit jedem Glas Wasser wächst eine Pflanze. Welche es wird, zeigt sich erst über den Tag.</p>' : ''}
     <label class="field">Wie heißt dein Kübel?<input name="potName" maxlength="20" value="${esc(s.potName)}" placeholder="zum Beispiel Kurt" autocomplete="off"></label>
     <fieldset><legend>Über dich</legend>
@@ -200,12 +213,13 @@ function openSettings(first) {
       <div id="import-box"></div></fieldset>
     <details><summary>Erinnerungen einrichten</summary><ol class="hint"><li>Kurzbefehle-App öffnen, unten „Automation“, dann „Neue Automation“.</li><li>„Tageszeit“ wählen, zum Beispiel 10 Uhr, täglich, „Sofort ausführen“.</li><li>Aktion „Mitteilung anzeigen“ mit einem Text wie „Dein Kübel hat Durst“.</li><li>Für weitere Uhrzeiten wiederholen.</li></ol><p class="hint">Eine Web-App darf auf dem iPhone keine eigenen Mitteilungen planen. Mit der späteren Swift-App geht das direkt.</p></details>
     <details><summary>Quellen und Hinweis</summary><p class="hint">Richtwerte: D-A-CH-Referenzwerte für die Nährstoffzufuhr 2018 (Deutsche Gesellschaft für Ernährung). „Sanft“ und „Reichlich“ sind eigene Stufen der App. Zuschläge: Verbraucherzentrale (Sport) und eine eigene vorsichtige Stufe (Hitze). Die App ersetzt keinen ärztlichen Rat, etwa bei Herz- oder Nierenerkrankungen.</p></details>`}
-    <button class="sign wide" type="submit">${first ? 'Los geht’s' : 'Speichern'}</button>
-    ${first ? '' : '<button class="link wide" type="button" data-close>Abbrechen</button>'}
-  </form>`);
+    ${first ? '<button class="sign wide" type="submit">Los geht’s</button>' : '<p class="hint saved" id="saved">Änderungen werden sofort gespeichert.</p>'}
+  </form>`;
+  if (state.view !== 'einst') show('einst');
+  $('einst').scrollTop = 0;
   const form = $('form');
   const read = () => {
-    const v = Object.fromEntries(new FormData(form)), num = (x) => (x === undefined || x === '' ? null : +x);
+    const s = state.settings, v = Object.fromEntries(new FormData(form)), num = (x) => (x === undefined || x === '' ? null : +x);
     const next = { ...s, potName: v.potName, birthYear: num(v.birthYear), weightKg: num(v.weightKg), special: v.special || null, level: v.level || s.level, customGoalMl: num(v.customGoalMl) ?? s.customGoalMl };
     if (!first) Object.assign(next, { sizes: [num(v.size0), num(v.size1), num(v.size2)], pot: v.pot || s.pot, bed: v.bed || s.bed });
     return sanitizeSettings(next);
@@ -216,18 +230,30 @@ function openSettings(first) {
     $('custom-field').hidden = cur.level !== 'frei';
   };
   levels();
-  form.oninput = (ev) => { if (ev.target.name !== 'potName' && ev.target.id !== 'import') levels(); };
-  form.onsubmit = async (ev) => {
-    ev.preventDefault();
-    await saveSettings({ ...read(), onboarded: true });
+  const persist = async (onboarded) => {
+    await saveSettings({ ...read(), onboarded });
     const t = state.today;
     t.goalMl = L.goalMl(state.settings, year);
     if (state.days.has(t.day)) await saveDay(t);
-    closeSheet(); refresh();
-    if (first) say(`Hallo! Ich bin ${state.settings.potName || 'dein Kübel'}. Tipp auf einen Tropfen.`, 6000);
+    refresh();
+  };
+  // Ohne Speichern-Knopf: jede Änderung zählt sofort (Textfelder, sobald man sie verlässt).
+  const autosave = () => { if (!first) persist(true).then(() => { $('saved').textContent = 'Gespeichert.'; }); };
+  form.oninput = (ev) => {
+    if (ev.target.name === 'potName' || ev.target.id === 'import') return;
+    const pickNow = ev.target.type === 'radio' || ev.target.tagName === 'SELECT';
+    levels();
+    if (pickNow) autosave(); // die Stufen werden neu gezeichnet, ein späteres "change" käme nicht mehr an
+  };
+  form.onchange = (ev) => { if (ev.target.type !== 'radio' && ev.target.tagName !== 'SELECT' && ev.target.id !== 'import') autosave(); };
+  form.onsubmit = async (ev) => {
+    ev.preventDefault();
+    if (!first) return;
+    await persist(true);
+    $('app').classList.remove('erst'); show('heute');
+    say(`Hallo! Ich bin ${state.settings.potName || 'dein Kübel'}. Tipp auf einen Tropfen.`, 6000);
   };
   body.onclick = (ev) => {
-    if (ev.target.closest('[data-close]')) closeSheet();
     if (ev.target.id === 'export') exportData();
     if (ev.target.id === 'upd') {
       $('upd-hint').textContent = 'Suche …';
@@ -243,7 +269,7 @@ function openSettings(first) {
       await storage.replaceDays(res.days);
       state.days = new Map(res.days.map((d) => [d.day, d]));
       await saveSettings({ ...res.settings, onboarded: true });
-      state.today = null; ensureToday(); closeSheet(); refresh(); toast('Sicherung eingespielt');
+      state.today = null; ensureToday(); refresh(); show('heute'); toast('Sicherung eingespielt');
     };
   };
 }
@@ -284,18 +310,16 @@ async function start() {
   });
   ensureToday();
   refresh();
-  show(location.hash === '#beet' ? 'beet' : 'heute');
+  show(['beet', 'einst'].includes(location.hash.slice(1)) ? location.hash.slice(1) : 'heute');
 
   $('drops').onclick = (ev) => { const b = ev.target.closest('.drop'); if (b) addEntry(+b.dataset.ml, state.today); };
   $('tag').onclick = () => openDay(state.today.day);
-  $('gear').onclick = () => openSettings(false);
   $('gift').onclick = openReward;
   document.querySelector('.nav').onclick = (ev) => { const b = ev.target.closest('button'); if (b) { history.replaceState(null, '', '#' + b.dataset.view); show(b.dataset.view); } };
   const openFromBeet = (ev) => { const hit = ev.target.closest('[data-date]'); if (hit && hit.dataset.date) openDay(hit.dataset.date); };
   $('beet-rows').onclick = openFromBeet;
   $('beet-rows').onkeydown = (ev) => { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); openFromBeet(ev); } };
-  $('sheet').onclick = (ev) => { if (ev.target === $('sheet') && state.settings.onboarded) closeSheet(); };
-  $('sheet').oncancel = (ev) => { if (!state.settings.onboarded) ev.preventDefault(); };
+  $('sheet').onclick = (ev) => { if (ev.target === $('sheet')) closeSheet(); };
 
   const tick = () => {
     if (ensureToday()) { refresh(); toast('Ein neuer Tag. Die Pflanze von gestern steht jetzt im Beet.'); }

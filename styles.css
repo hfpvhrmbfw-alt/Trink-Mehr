@@ -42,13 +42,13 @@ svg text { font-family:inherit; }
 .sign:active { transform:translateY(2px); box-shadow:0 1px 0 var(--wood-dark); }
 .sign.wide { display:block; width:100%; margin-top:16px; }
 
-.drops { position:absolute; left:0; right:0; bottom:calc(var(--safe-b) + 60px); display:flex; justify-content:center; align-items:flex-end; gap:14px; }
+.drops { position:absolute; left:0; right:0; bottom:calc(var(--safe-b) + 60px); display:flex; justify-content:center; align-items:flex-end; gap:34px; }
 .drop { border:0; background:none; padding:2px 4px; min-width:44px; min-height:44px; display:grid; place-items:end center; transition:transform .15s cubic-bezier(.3,1.8,.5,1); }
 .drop:active { transform:scale(.86) translateY(3px); }
 .drop svg { display:block; width:auto; filter:drop-shadow(0 2px 2px rgba(59,46,36,.28)); }
 
 .nav { position:absolute; left:50%; bottom:calc(var(--safe-b) + 10px); transform:translateX(-50%); display:flex; padding:3px; border-radius:999px; z-index:3; }
-.tab { border:0; background:none; border-radius:999px; min-height:36px; min-width:76px; padding:6px 16px; font-size:14px; font-weight:600; color:inherit; }
+.tab { border:0; background:none; border-radius:999px; min-height:36px; min-width:64px; padding:6px 14px; font-size:14px; font-weight:600; color:inherit; }
 .nav { color:#3B2E24; }
 .tab[aria-current="page"] { background:#9EBE84; color:#2C3A24; }
 
@@ -145,3 +145,13 @@ summary { min-height:44px; display:flex; align-items:center; font-weight:700; cu
 .hover { animation:hover 3s ease-in-out infinite alternate; }
 @keyframes hover { to { transform:translate(-8px,6px); } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation:none !important; transition:none !important; } }
+
+/* Einstellungen als eigene Seite: Papier, scrollt, unten Platz für die Leiste */
+.page { overflow-y:auto; -webkit-overflow-scrolling:touch; background:var(--paper); color:var(--paper-ink); -webkit-user-select:text; user-select:text; }
+.page-body { max-width:520px; margin:0 auto; padding:calc(var(--safe-t) + 18px) calc(var(--safe-r) + 18px) calc(var(--safe-b) + 84px) calc(var(--safe-l) + 18px); }
+.page h1 { margin:0 0 6px; font-size:26px; }
+.page .saved { text-align:center; margin:18px 0 0; }
+.erst .nav { display:none; }
+.erst .page-body { padding-bottom:calc(var(--safe-b) + 24px); }
+[data-view="einst"] .nav { box-shadow:0 2px 8px rgba(59,46,36,.25); }
+@media (prefers-color-scheme: dark) { [data-view="einst"] .nav { background:#3A312B; color:#F3EADF; } }
