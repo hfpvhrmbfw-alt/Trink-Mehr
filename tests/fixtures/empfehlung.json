@@ -1,0 +1,14 @@
+[
+  { "name": "ohne Angaben: Gruppe 25 bis 50", "settings": {}, "year": 2026, "recommended": 1400, "goal": 1400 },
+  { "name": "22 Jahre", "settings": { "birthYear": 2004 }, "year": 2026, "recommended": 1450, "goal": 1450 },
+  { "name": "17 Jahre", "settings": { "birthYear": 2009 }, "year": 2026, "recommended": 1550, "goal": 1550 },
+  { "name": "58 Jahre", "settings": { "birthYear": 1968 }, "year": 2026, "recommended": 1250, "goal": 1250 },
+  { "name": "70 Jahre", "settings": { "birthYear": 1956 }, "year": 2026, "recommended": 1300, "goal": 1300 },
+  { "name": "30 Jahre, 65 kg trifft den Tabellenwert", "settings": { "birthYear": 1996, "weightKg": 65 }, "year": 2026, "recommended": 1400, "goal": 1400 },
+  { "name": "30 Jahre, 60 kg", "settings": { "birthYear": 1996, "weightKg": 60 }, "year": 2026, "recommended": 1300, "goal": 1300 },
+  { "name": "30 Jahre, 80 kg", "settings": { "birthYear": 1996, "weightKg": 80 }, "year": 2026, "recommended": 1750, "goal": 1750 },
+  { "name": "stillend", "settings": { "birthYear": 1996, "weightKg": 60, "special": "stillend" }, "year": 2026, "recommended": 1700, "goal": 1700 },
+  { "name": "sanft sind 80 Prozent", "settings": { "birthYear": 1996, "level": "sanft" }, "year": 2026, "recommended": 1400, "goal": 1100 },
+  { "name": "reichlich sind 2000", "settings": { "birthYear": 1996, "level": "reichlich" }, "year": 2026, "recommended": 1400, "goal": 2000 },
+  { "name": "frei", "settings": { "level": "frei", "customGoalMl": 1800 }, "year": 2026, "recommended": 1400, "goal": 1800 }
+]
