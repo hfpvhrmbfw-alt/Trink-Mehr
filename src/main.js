@@ -89,8 +89,22 @@ async function addEntry(ml, d) {
       else say(now > before ? defaultSaying() : pick(T.SAYINGS.danke), 2200);
     }, 500);
   }
-  toast(`${fmt(ml)} eingetragen`, 'Rückgängig', () => removeEntry(d, entry.id));
+  if (isToday) offerUndo(ml, d, entry.id);
+  else toast(`${fmt(ml)} eingetragen`);
 }
+// Statt eines Balkens: ein kleiner Pfeil neben dem Tropfen, der gerade gedrückt wurde.
+let undoTimer;
+function offerUndo(ml, d, id) {
+  const btn = $('undo'), drop = document.querySelector(`.drop[data-ml="${ml}"]`);
+  if (!drop) return;
+  const r = drop.getBoundingClientRect(), box = $('heute').getBoundingClientRect();
+  btn.style.left = `${r.right - box.left - 6}px`; btn.style.top = `${r.top - box.top - 4}px`;
+  btn.hidden = false; btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
+  btn.setAttribute('aria-label', `${fmt(ml)} zurücknehmen`);
+  btn.onclick = () => { hideUndo(); removeEntry(d, id); say('Zurückgenommen.', 1600); };
+  clearTimeout(undoTimer); undoTimer = setTimeout(hideUndo, 6000);
+}
+function hideUndo() { clearTimeout(undoTimer); $('undo').hidden = true; }
 async function removeEntry(d, id) {
   d.entries = d.entries.filter((e) => e.id !== id);
   await saveDay(d);
@@ -123,6 +137,7 @@ function show(view) {
   state.view = view; $('app').dataset.view = view;
   for (const v of ['heute', 'beet', 'einst']) $(v).hidden = view !== v;
   if (view === 'einst') $('toast').hidden = true;
+  if (view !== 'heute') hideUndo();
   paintTop();
   document.querySelectorAll('.nav button').forEach((b) => b.setAttribute('aria-current', b.dataset.view === view ? 'page' : 'false'));
   if (view === 'beet') renderBeetView();
@@ -188,31 +203,31 @@ function swatches(kind, list, names) {
 }
 function openSettings(first) {
   const s = state.settings, year = clock().year;
-  const body = $('einst-body');
+  const body = $('einst-body'), open = first ? ' open' : '';
   $('app').classList.toggle('erst', !!first);
   body.innerHTML = `<form id="form" novalidate>
     <h1>${first ? 'Willkommen im Garten' : 'Einstellungen'}</h1>
     ${first ? '<p class="lead">Jeden Morgen steht hier ein Kübel mit frischer Erde. Mit jedem Glas Wasser wächst eine Pflanze. Welche es wird, zeigt sich erst über den Tag.</p>' : ''}
-    <label class="field">Wie heißt dein Kübel?<input name="potName" maxlength="20" value="${esc(s.potName)}" placeholder="zum Beispiel Kurt" autocomplete="off"></label>
-    <fieldset><legend>Über dich</legend>
+    <details class="sec"${open}><summary>Dein Kübel<span class="val" id="v-pot"></span></summary><label class="field">Wie heißt dein Kübel?<input name="potName" maxlength="20" value="${esc(s.potName)}" placeholder="zum Beispiel Kurt" autocomplete="off"></label></details>
+    <details class="sec"${open}><summary>Über dich<span class="val" id="v-me"></span></summary>
       <div class="pair"><label class="field">Geburtsjahr<input name="birthYear" inputmode="numeric" pattern="[0-9]*" value="${s.birthYear || ''}" placeholder="1996"></label>
       <label class="field">Gewicht in kg<input name="weightKg" inputmode="numeric" pattern="[0-9]*" value="${s.weightKg || ''}" placeholder="freiwillig"></label></div>
       <label class="field">Besonderes<select name="special"><option value="">nichts</option><option value="schwanger" ${s.special === 'schwanger' ? 'selected' : ''}>schwanger</option><option value="stillend" ${s.special === 'stillend' ? 'selected' : ''}>stillend</option></select></label>
-      <p class="hint">Alter und Gewicht bestimmen die empfohlene Menge. Die Angaben bleiben auf diesem Gerät.</p></fieldset>
-    <fieldset><legend>Tagesziel</legend>
+      <p class="hint">Alter und Gewicht bestimmen die empfohlene Menge. Die Angaben bleiben auf diesem Gerät.</p></details>
+    <details class="sec"${open}><summary>Tagesziel<span class="val" id="v-goal"></span></summary>
       <div id="levels"></div>
-      <label class="field" id="custom-field">Eigene Menge in ml<input name="customGoalMl" inputmode="numeric" pattern="[0-9]*" value="${s.customGoalMl}"></label></fieldset>
-    ${first ? '' : `<fieldset><legend>Tropfen</legend><div class="trio">${s.sizes.map((ml, i) => `<label class="field">${['Klein', 'Mittel', 'Groß'][i]}<input name="size${i}" inputmode="numeric" pattern="[0-9]*" value="${ml}"></label>`).join('')}</div>
-      <p class="hint">Stell sie auf dein Glas und deine Flasche ein, in ml.</p></fieldset>
-    <fieldset><legend>Garten gestalten</legend><div class="swatches">${swatches('pot', POTS, T.POT_NAMES)}</div><div class="swatches">${swatches('bed', BEDS, T.BED_NAMES)}</div>
-      <p class="hint">Neue Kübel und Beetkanten gibt es für Gartentage, also für jeden Tag mit einem Eintrag. Was freigeschaltet ist, bleibt.</p></fieldset>
-    <fieldset><legend>App</legend><p class="hint" id="upd-hint">Neue Versionen kommen von selbst, sobald du die App öffnest.</p><div class="chips"><button type="button" class="chip-btn" id="upd">Nach neuer Version suchen</button></div></fieldset>
-    <fieldset><legend>Sicherung</legend>
+      <label class="field" id="custom-field">Eigene Menge in ml<input name="customGoalMl" inputmode="numeric" pattern="[0-9]*" value="${s.customGoalMl}"></label></details>
+    ${first ? '' : `<details class="sec"${open}><summary>Tropfen<span class="val" id="v-drops"></span></summary><div class="trio">${s.sizes.map((ml, i) => `<label class="field">${['Klein', 'Mittel', 'Groß'][i]}<input name="size${i}" inputmode="numeric" pattern="[0-9]*" value="${ml}"></label>`).join('')}</div>
+      <p class="hint">Stell sie auf dein Glas und deine Flasche ein, in ml.</p></details>
+    <details class="sec"${open}><summary>Garten gestalten</summary><div class="swatches">${swatches('pot', POTS, T.POT_NAMES)}</div><div class="swatches">${swatches('bed', BEDS, T.BED_NAMES)}</div>
+      <p class="hint">Neue Kübel und Beetkanten gibt es für Gartentage, also für jeden Tag mit einem Eintrag. Was freigeschaltet ist, bleibt.</p></details>
+    <details class="sec"${open}><summary>App</summary><p class="hint" id="upd-hint">Neue Versionen kommen von selbst, sobald du die App öffnest.</p><div class="chips"><button type="button" class="chip-btn" id="upd">Nach neuer Version suchen</button></div></details>
+    <details class="sec"${open}><summary>Sicherung</summary>
       <p class="hint">${s.lastBackupDay ? `Zuletzt gesichert am ${esc(longDate(s.lastBackupDay))}.` : 'Noch nie gesichert.'} Dein Garten liegt nur auf diesem Gerät.</p>
       <div class="chips"><button type="button" class="chip-btn" id="export">Sicherung speichern</button><label class="chip-btn">Sicherung einspielen<input type="file" id="import" accept="application/json,.json" hidden></label></div>
-      <div id="import-box"></div></fieldset>
-    <details><summary>Erinnerungen einrichten</summary><ol class="hint"><li>Kurzbefehle-App öffnen, unten „Automation“, dann „Neue Automation“.</li><li>„Tageszeit“ wählen, zum Beispiel 10 Uhr, täglich, „Sofort ausführen“.</li><li>Aktion „Mitteilung anzeigen“ mit einem Text wie „Dein Kübel hat Durst“.</li><li>Für weitere Uhrzeiten wiederholen.</li></ol><p class="hint">Eine Web-App darf auf dem iPhone keine eigenen Mitteilungen planen. Mit der späteren Swift-App geht das direkt.</p></details>
-    <details><summary>Quellen und Hinweis</summary><p class="hint">Richtwerte: D-A-CH-Referenzwerte für die Nährstoffzufuhr 2018 (Deutsche Gesellschaft für Ernährung). „Sanft“ und „Reichlich“ sind eigene Stufen der App. Zuschläge: Verbraucherzentrale (Sport) und eine eigene vorsichtige Stufe (Hitze). Die App ersetzt keinen ärztlichen Rat, etwa bei Herz- oder Nierenerkrankungen.</p></details>`}
+      <div id="import-box"></div></details>
+    <details class="sec"><summary>Erinnerungen einrichten</summary><ol class="hint"><li>Kurzbefehle-App öffnen, unten „Automation“, dann „Neue Automation“.</li><li>„Tageszeit“ wählen, zum Beispiel 10 Uhr, täglich, „Sofort ausführen“.</li><li>Aktion „Mitteilung anzeigen“ mit einem Text wie „Dein Kübel hat Durst“.</li><li>Für weitere Uhrzeiten wiederholen.</li></ol><p class="hint">Eine Web-App darf auf dem iPhone keine eigenen Mitteilungen planen. Mit der späteren Swift-App geht das direkt.</p></details>
+    <details class="sec"><summary>Quellen und Hinweis</summary><p class="hint">Richtwerte: D-A-CH-Referenzwerte für die Nährstoffzufuhr 2018 (Deutsche Gesellschaft für Ernährung). „Sanft“ und „Reichlich“ sind eigene Stufen der App. Zuschläge: Verbraucherzentrale (Sport) und eine eigene vorsichtige Stufe (Hitze). Die App ersetzt keinen ärztlichen Rat, etwa bei Herz- oder Nierenerkrankungen.</p></details>`}
     ${first ? '<button class="sign wide" type="submit">Los geht’s</button>' : '<p class="hint saved" id="saved">Änderungen werden sofort gespeichert.</p>'}
   </form>`;
   if (state.view !== 'einst') show('einst');
@@ -228,6 +243,11 @@ function openSettings(first) {
     const cur = read();
     $('levels').innerHTML = LEVELS.map((id) => `<label class="level"><input type="radio" name="level" value="${id}" ${cur.level === id ? 'checked' : ''}><span><b>${T.LEVEL_NAMES[id]}</b> ${id === 'frei' ? '' : fmt(L.goalMl({ ...cur, level: id }, year))}<small>${T.LEVEL_HINTS[id]}</small></span></label>`).join('');
     $('custom-field').hidden = cur.level !== 'frei';
+    // Kurzfassung in den zugeklappten Zeilen, damit man alles auf einen Blick sieht
+    $('v-pot').textContent = cur.potName || '';
+    $('v-me').textContent = [cur.birthYear, cur.weightKg && cur.weightKg + ' kg'].filter(Boolean).join(' · ');
+    $('v-goal').textContent = fmt(L.goalMl(cur, year));
+    if ($('v-drops')) $('v-drops').textContent = cur.sizes.join(' · ');
   };
   levels();
   const persist = async (onboarded) => {
@@ -240,7 +260,8 @@ function openSettings(first) {
   // Ohne Speichern-Knopf: jede Änderung zählt sofort (Textfelder, sobald man sie verlässt).
   const autosave = () => { if (!first) persist(true).then(() => { $('saved').textContent = 'Gespeichert.'; }); };
   form.oninput = (ev) => {
-    if (ev.target.name === 'potName' || ev.target.id === 'import') return;
+    if (ev.target.id === 'import') return;
+    if (ev.target.name === 'potName') { $('v-pot').textContent = ev.target.value; return; }
     const pickNow = ev.target.type === 'radio' || ev.target.tagName === 'SELECT';
     levels();
     if (pickNow) autosave(); // die Stufen werden neu gezeichnet, ein späteres "change" käme nicht mehr an

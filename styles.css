@@ -155,3 +155,24 @@ summary { min-height:44px; display:flex; align-items:center; font-weight:700; cu
 .erst .page-body { padding-bottom:calc(var(--safe-b) + 24px); }
 [data-view="einst"] .nav { box-shadow:0 2px 8px rgba(59,46,36,.25); }
 @media (prefers-color-scheme: dark) { [data-view="einst"] .nav { background:#3A312B; color:#F3EADF; } }
+
+/* Abschnitte der Einstellungen: zugeklappte Zeilen mit Kurzfassung rechts */
+.page .sec { border:1.5px solid var(--line); border-top:1.5px solid var(--line); border-radius:14px; margin:8px 0 0; padding:0 14px; }
+.page .sec[open] { padding-bottom:14px; }
+.page .sec summary { list-style:none; gap:8px; }
+.page .sec summary::-webkit-details-marker { display:none; }
+.page .sec summary::after { content:""; width:8px; height:8px; margin-left:4px; border-right:2px solid var(--paper-muted); border-bottom:2px solid var(--paper-muted); transform:rotate(45deg) translate(-2px,-2px); transition:transform .2s; flex:none; }
+.page .sec[open] summary::after { transform:rotate(225deg) translate(-2px,-2px); }
+.page .sec .val { margin-left:auto; color:var(--paper-muted); font-weight:500; font-size:15px; font-variant-numeric:tabular-nums; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:55%; }
+.page .sec > .field:first-of-type, .page .sec > .pair:first-of-type { margin-top:0; }
+.page h1 { margin-bottom:10px; }
+.page .sec summary:not(:has(.val))::after { margin-left:auto; }
+.page .sec summary::after { margin-right:2px; }
+
+/* Rückgängig: kleiner runder Pfeil oben rechts am zuletzt gedrückten Tropfen */
+.undo { position:absolute; z-index:2; width:30px; height:30px; border-radius:50%; border:0; padding:0; display:grid; place-items:center; background:#FBF6EC; color:#3B2E24; box-shadow:0 2px 4px rgba(59,46,36,.25); }
+.undo::before { content:""; position:absolute; inset:-7px; } /* größere Trefferfläche */
+.nacht .undo { background:#34406B; color:#EEF2FF; }
+.undo.pop { animation:pop .3s cubic-bezier(.3,1.8,.5,1); }
+@keyframes pop { from { transform:scale(.3); opacity:0; } }
+.tab.icon { min-width:48px; padding:6px 12px; display:grid; place-items:center; }
