@@ -32,8 +32,6 @@ export function createScene(root, on) {
   const soft = el('radialGradient', { id: 'schatten' }, S); el('stop', { offset: 0, 'stop-color': '#0B2A1E', 'stop-opacity': 0.32 }, soft); el('stop', { offset: 1, 'stop-color': '#0B2A1E', 'stop-opacity': 0 }, soft);
   const shadow = el('ellipse', { cx: 130, cy: 420, rx: 40, ry: 5, fill: 'url(#schatten)' }, front);
   const potWrap = el('g', { transform: 'translate(130 354) scale(1.5)' }, front), potWob = el('g', { class: 'tap', filter: 'url(#lage)' }, potWrap);
-  const dew = el('g', { class: 'fade', 'pointer-events': 'none' }, front);
-  [[106, 356], [154, 354], [131, 361]].forEach(([cx, cy]) => el('ellipse', { cx, cy, rx: 2.2, ry: 2.8, fill: '#CDEBFF', stroke: '#FFFFFF', 'stroke-width': 0.6 }, dew));
   const visitor = el('g', { class: 'hover', 'pointer-events': 'none' }, front), bf = el('g', { transform: 'translate(176 262)' }, visitor);
   el('ellipse', { cx: -5, cy: 0, rx: 5, ry: 7, fill: '#FFB347', class: 'flap' }, bf); el('ellipse', { cx: 5, cy: 0, rx: 5, ry: 7, fill: '#FF8A5B', class: 'flap' }, bf); el('rect', { x: -0.8, y: -5, width: 1.6, height: 10, rx: 0.8, fill: '#2A1A12' }, bf);
   const stars = el('g', { class: 'fade', 'pointer-events': 'none' }, S);
@@ -74,7 +72,6 @@ export function createScene(root, on) {
       stars.style.opacity = c.star; flies.style.opacity = c.fly;
       moon.style.opacity = v.phase === 'nacht' ? 1 : 0; zz.style.opacity = v.phase === 'nacht' ? 1 : 0;
       moonDark.setAttribute('cx', v.moon < 0.5 ? -64 * v.moon : 64 * (1 - v.moon));
-      dew.style.opacity = v.phase === 'morgen' && !hang ? 1 : 0;
       hook.style.display = hang ? '' : 'none'; shadow.style.display = hang ? 'none' : '';
       visitor.style.display = v.visitor ? '' : 'none';
       const k = [v.species.id, v.stage, v.mood, v.pot.id].join('|');
