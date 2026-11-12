@@ -65,7 +65,7 @@ function renderToday(keepSaying) {
   $('app').classList.toggle('nacht', phase === 'nacht');
   paintTop();
   $('ml').textContent = fmt(L.dayTotalMl(d));
-  $('sub').textContent = 'von ' + fmt(L.dayGoalMl(d)) + (L.extraMl(d) ? ' mit Zuschlag' : '');
+  $('sub').textContent = 'von ' + fmt(L.dayGoalMl(d));
   $('stage').textContent = st === 4 ? T.SPECIES_NAMES[sp.id] : T.STAGE_NAMES[st];
   $('tag').setAttribute('aria-label', `Heute ${fmt(L.dayTotalMl(d))} von ${fmt(L.dayGoalMl(d))}, Stufe ${T.STAGE_NAMES[st]}. Tagesdetails öffnen`);
   if (!keepSaying) say(defaultSaying());
@@ -97,8 +97,11 @@ let undoTimer;
 function offerUndo(ml, d, id) {
   const btn = $('undo'), drop = document.querySelector(`.drop[data-ml="${ml}"]`);
   if (!drop) return;
-  const r = drop.getBoundingClientRect(), box = $('heute').getBoundingClientRect();
-  btn.style.left = `${r.right - box.left - 6}px`; btn.style.top = `${r.top - box.top - 4}px`;
+  // Genau über dem Tropfen, aus dem Layout gemessen (nicht aus dem gerade gedrückten, verkleinerten Bild),
+  // damit der Pfeil nie auf dem Nachbartropfen liegt und man ihn nicht aus Versehen trifft.
+  const row = $('drops'), svgH = drop.querySelector('svg').getBoundingClientRect().height / (drop.matches(':active') ? 0.86 : 1);
+  btn.style.left = `${row.offsetLeft + drop.offsetLeft + drop.offsetWidth / 2 - 15}px`;
+  btn.style.top = `${row.offsetTop + drop.offsetTop + drop.offsetHeight - svgH - 40}px`;
   btn.hidden = false; btn.classList.remove('pop'); void btn.offsetWidth; btn.classList.add('pop');
   btn.setAttribute('aria-label', `${fmt(ml)} zurücknehmen`);
   btn.onclick = () => { hideUndo(); removeEntry(d, id); say('Zurückgenommen.', 1600); };
@@ -167,20 +170,21 @@ function sheet(html) {
   $('sheet-body').scrollTop = 0;
   return $('sheet-body');
 }
-const closeSheet = () => $('sheet').close();
+const closeSheet = () => { extraOpen = false; $('sheet').close(); };
 
+let extraOpen = false;
 function openDay(date) {
   const c = clock(), d = dayFor(date), isToday = date === state.today.day;
   const editable = L.dayToNum(c.day) - L.dayToNum(date) <= 1;
   const p = L.progress(d), st = L.stageOf(p), sp = speciesOf(d), has = d.entries.length > 0;
   const body = sheet(`
-    <h2>${isToday ? 'Heute' : esc(longDate(date))}</h2>
+    <h2 tabindex="-1" autofocus>${isToday ? 'Heute' : esc(longDate(date))}</h2>
     <p class="lead">${has ? (p >= 1 ? `Eine <b>${esc(T.SPECIES_NAMES[sp.id])}</b> ist aufgeblüht.` : `${isToday ? 'Bis jetzt' : 'Es blieb bei'}: <b>${T.STAGE_NAMES[st]}</b>.${isToday ? ' Was es wird, bleibt noch geheim.' : ''}`) : 'Kein Eintrag an diesem Tag.'}</p>
     <p class="big">${fmt(L.dayTotalMl(d))} <small>von ${fmt(L.dayGoalMl(d))}</small></p>
-    ${isToday ? `<fieldset><legend>Heute anders?</legend>
-      <label class="line">Sport <select id="sport">${[0, 30, 60, 90, 120, 180].map((m) => `<option value="${m}" ${d.sportMin === m ? 'selected' : ''}>${m ? `${m} Minuten (+${fmt(m / 30 * SPORT_ML_PER_30_MIN)})` : 'kein Sport'}</option>`).join('')}</select></label>
+    ${isToday ? `<details class="sec" id="extra"${extraOpen ? ' open' : ''}><summary>Sport oder Hitze<span class="val">${L.extraMl(d) ? '+ ' + fmt(L.extraMl(d)) : 'nichts'}</span></summary>
+      <label class="line">Sport <select id="sport">${[0, 30, 60, 90, 120, 180].map((m) => `<option value="${m}" ${d.sportMin === m ? 'selected' : ''}>${m ? `${m} Min. (+${m / 30 * SPORT_ML_PER_30_MIN})` : 'kein Sport'}</option>`).join('')}</select></label>
       <label class="line"><span>Heißer Tag (+${fmt(HEAT_ML)})</span><input type="checkbox" id="heat" ${d.heat ? 'checked' : ''}></label>
-      <p class="hint">Sport kostet laut Verbraucherzentrale 0,5 bis 1,5 Liter je Stunde, hier zählt die untere Grenze. Für Hitze gibt es keine feste Zahl, die 500 ml sind eine vorsichtige Stufe.</p></fieldset>` : ''}
+      <p class="hint">Sport kostet laut Verbraucherzentrale 0,5 bis 1,5 Liter je Stunde, hier zählt die untere Grenze. Für Hitze gibt es keine feste Zahl, die 500 ml sind eine vorsichtige Stufe.</p></details>` : ''}
     <h3>Einträge</h3>
     ${has ? `<ul class="entries">${d.entries.map((e) => `<li><span>${e.time} Uhr</span><b>${fmt(e.ml)}</b>${editable ? `<button type="button" class="link" data-del="${esc(e.id)}" aria-label="Eintrag ${e.time} Uhr löschen">Löschen</button>` : ''}</li>`).join('')}</ul>` : '<p class="hint">Noch nichts eingetragen.</p>'}
     ${editable ? `<div class="chips">${state.settings.sizes.map((ml) => `<button type="button" class="chip-btn" data-add="${ml}">+ ${fmt(ml)}</button>`).join('')}</div>` : '<p class="hint">Ältere Tage sind fest und lassen sich nicht mehr ändern.</p>'}
@@ -191,6 +195,7 @@ function openDay(date) {
     if (t.dataset.del) { await removeEntry(d, t.dataset.del); openDay(date); }
     if (t.dataset.add) { await addEntry(+t.dataset.add, d); refresh(); openDay(date); }
   };
+  if ($('extra')) $('extra').ontoggle = () => { extraOpen = $('extra').open; };
   body.onchange = async (ev) => {
     if (ev.target.id === 'sport') d.sportMin = +ev.target.value; else if (ev.target.id === 'heat') d.heat = ev.target.checked; else return;
     await saveDay(d); refresh(); openDay(date);

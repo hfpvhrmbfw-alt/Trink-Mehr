@@ -1,6 +1,6 @@
 // Service Worker: App-Hülle zuerst aus dem Zwischenspeicher, damit sie sofort und offline startet.
 // VERSION bei jeder Änderung an einer Datei aus SHELL hochzählen.
-const VERSION = 'v7';
+const VERSION = 'v8';
 const SHELL = ['./', 'index.html', 'styles.css', 'manifest.webmanifest', 'icons/icon-192.png', 'icons/apple-touch-icon.png',
   'src/main.js', 'src/model.js', 'src/logic.js', 'src/catalog.js', 'src/storage.js', 'src/texts.js', 'src/plants.js', 'src/scene.js', 'src/beet.js', 'src/papier.js'];
 
