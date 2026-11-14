@@ -53,7 +53,7 @@ svg text { font-family:inherit; }
 .tab[aria-current="page"] { background:#9EBE84; color:#2C3A24; }
 
 /* Beet: oben Himmel, Zaun und Hügel als Bild, darunter gemalte Erde, die mit den Reihen mitscrollt */
-.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:#8E6A4E; padding-bottom:calc(var(--safe-b) + 70px); }
+.beet { overflow-y:auto; -webkit-overflow-scrolling:touch; background:#7DA56D; padding-bottom:calc(var(--safe-b) + 70px); }
 .beet-top { position:relative; padding:calc(var(--safe-t) + 12px) 16px 84px; background:#F4E7D4; }
 #beet-land { position:absolute; inset:0; width:100%; height:100%; display:block; }
 .beet-top > .beet-sky { position:relative; }
